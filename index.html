@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Viewport optimizado para móviles -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a1a1a">
     <title>Dojo de Kana - Ninja Way</title>
-    <!-- Fuentes de Google: Klee One (Japonés), Oswald (Títulos), Roboto Condensed (Texto) -->
     <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Oswald:wght@500;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Vinculamos la hoja de estilos -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
     <main class="main-content">
         
         <!-- PANTALLA DE CONFIGURACIÓN -->
-        <div id="setup-screen" class="ninja-panel">
+        <div id="setup-screen" class="ninja-panel fade-in">
             <div class="panel-title">
                 <h2>CONFIGURACIÓN DE MISIÓN</h2>
             </div>
@@ -49,7 +49,7 @@
                 <label class="checkbox-item"><input type="checkbox" value="dakuten"> DAKUTEN</label>
             </div>
 
-            <div class="section-divider"><span>02</span> PARÁMETROS DE MISIÓN</div>
+            <div class="section-divider"><span>02</span> PARÁMETROS</div>
             
             <div class="options-list">
                 <div class="option-row">
@@ -77,7 +77,7 @@
                 </div>
 
                 <div class="option-row">
-                    <div class="opt-label">SISTEMA DE AUDIO <span class="sub">Pronunciación</span></div>
+                    <div class="opt-label">AUDIO <span class="sub">Pronunciación</span></div>
                     <label class="ninja-switch">
                         <input type="checkbox" id="audio-mode-toggle" checked>
                         <span class="slider"></span>
@@ -92,7 +92,7 @@
         </div>
 
         <!-- PANTALLA DE PRÁCTICA -->
-        <div id="practice-screen" class="ninja-panel" style="display:none;">
+        <div id="practice-screen" class="ninja-panel fade-in" style="display:none;">
             
             <div class="timer-wrapper" id="timer-container">
                 <div class="timer-bar" id="timer-bar"></div>
@@ -118,14 +118,13 @@
                 </div>
             </div>
             
-            <!-- Score alternativo cuando no hay pizarra -->
             <div id="score-only" class="score-box center" style="display:none; justify-content:center;">
                 <span id="high-score-display-alt" class="best-score" style="margin-right:15px;">BEST: 0</span>
                 <span id="counter-alt" class="current-score">SCORE: 0</span>
             </div>
 
             <div class="scroll-workspace" id="workspace">
-                <canvas id="writeCanvas" width="360" height="180"></canvas>
+                <canvas id="writeCanvas"></canvas>
                 <div id="svg-container"></div>
                 <!-- Esquinas decorativas -->
                 <div class="corner tl"></div><div class="corner tr"></div>
@@ -138,7 +137,6 @@
                 <button class="btn-ninja primary flex" id="action-btn" onclick="Game.handleAction()">REVELAR JUTSU</button>
             </div>
 
-            <!-- BOTONES DE EVALUACIÓN -->
             <div class="action-bar" id="evaluation-actions" style="display:none;">
                 <button class="btn-ninja danger outline" onclick="Game.markResult(false)">FALLO</button>
                 <button class="btn-ninja secondary outline icon" onclick="Game.replayAnimation()">↺</button>
@@ -148,7 +146,7 @@
 
     </main>
 
-    <!-- CONTENEDOR OCULTO PARA IMPRESIÓN -->
+    <!-- PRINT HIDDEN -->
     <div id="print-container">
         <h2 class="print-title">Hoja de Práctica</h2>
         <div id="print-content"></div>
