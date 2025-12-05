@@ -15,25 +15,61 @@ const Storage = {
     setHigh(s) { if(s > this.getHigh()){ localStorage.setItem(this.KEY_H, s); return true; } return false; }
 };
 
-// --- 2. CANVAS ---
+// --- 2. CANVAS OPTIMIZADO PARA MOVIL ---
 const CanvasManager = {
     el: document.getElementById('writeCanvas'), ctx: document.getElementById('writeCanvas').getContext('2d'),
     isDrawing: false, isActive: true,
     init() {
-        this.resize(); window.addEventListener('resize', () => this.resize());
-        ['mousedown','touchstart'].forEach(e=>this.el.addEventListener(e, ev=>{ ev.preventDefault(); this.start(ev.touches?ev.touches[0]:ev); }));
-        ['mouseup','touchend'].forEach(e=>this.el.addEventListener(e, ()=>this.stop()));
-        ['mousemove','touchmove'].forEach(e=>this.el.addEventListener(e, ev=>{ ev.preventDefault(); this.draw(ev.touches?ev.touches[0]:ev); }));
+        this.resize(); 
+        window.addEventListener('resize', () => this.resize());
+        // Eventos Touch (Passive: false es crucial para prevenir scroll)
+        this.el.addEventListener('touchstart', (e) => { e.preventDefault(); this.start(e.touches[0]); }, { passive: false });
+        this.el.addEventListener('touchend', (e) => { e.preventDefault(); this.stop(); }, { passive: false });
+        this.el.addEventListener('touchmove', (e) => { e.preventDefault(); this.draw(e.touches[0]); }, { passive: false });
+        // Eventos Mouse
+        this.el.addEventListener('mousedown', (e) => this.start(e));
+        this.el.addEventListener('mouseup', () => this.stop());
+        this.el.addEventListener('mousemove', (e) => this.draw(e));
+        this.setupStyle();
+    },
+    resize() { 
+        const r = this.el.parentElement.getBoundingClientRect();
+        // Soporte DPI alto (Retina)
+        const dpr = window.devicePixelRatio || 1;
+        this.el.width = r.width * dpr;
+        this.el.height = r.height * dpr;
+        this.ctx.scale(dpr, dpr);
+        // Mantener tamaño visual
+        this.el.style.width = r.width + 'px';
+        this.el.style.height = r.height + 'px';
+        this.setupStyle();
+    },
+    setupStyle() {
         this.ctx.lineWidth = 6; this.ctx.lineCap = 'round'; this.ctx.strokeStyle = '#333';
     },
-    resize() { const r=this.el.parentElement.getBoundingClientRect(); this.el.width=r.width; this.el.height=r.height; this.ctx.lineWidth=6; this.ctx.lineCap='round'; this.ctx.strokeStyle='#333'; },
-    pos(ev) { const r=this.el.getBoundingClientRect(); return {x:ev.clientX-r.left, y:ev.clientY-r.top}; },
+    pos(ev) { 
+        const r = this.el.getBoundingClientRect(); 
+        return {x: ev.clientX - r.left, y: ev.clientY - r.top}; 
+    },
     start(p) { if(!this.isActive)return; this.isDrawing=true; this.ctx.beginPath(); const xy=this.pos(p); this.ctx.moveTo(xy.x, xy.y); },
     draw(p) { if(!this.isDrawing||!this.isActive)return; const xy=this.pos(p); this.ctx.lineTo(xy.x, xy.y); this.ctx.stroke(); },
     stop() { this.isDrawing=false; },
-    clear() { this.ctx.clearRect(0,0,this.el.width,this.el.height); },
+    clear() { 
+        const dpr = window.devicePixelRatio || 1;
+        this.ctx.clearRect(0,0,this.el.width/dpr,this.el.height/dpr); 
+    },
     toggle(on) { this.isActive=on; this.el.style.display=on?'block':'none'; },
-    guides(n) { if(!this.isActive||n<=1)return; this.ctx.save(); this.ctx.strokeStyle='#ccc'; this.ctx.lineWidth=2; this.ctx.setLineDash([5,5]); const w=this.el.width/n; this.ctx.beginPath(); for(let i=1;i<n;i++){this.ctx.moveTo(w*i,0);this.ctx.lineTo(w*i,this.el.height);} this.ctx.stroke(); this.ctx.restore(); }
+    guides(n) { 
+        if(!this.isActive||n<=1)return; 
+        const dpr = window.devicePixelRatio || 1;
+        const w = (this.el.width / dpr) / n;
+        const h = this.el.height / dpr;
+        
+        this.ctx.save(); this.ctx.strokeStyle='#ccc'; this.ctx.lineWidth=2; this.ctx.setLineDash([5,5]); 
+        this.ctx.beginPath(); 
+        for(let i=1;i<n;i++){ this.ctx.moveTo(w*i,0); this.ctx.lineTo(w*i,h); } 
+        this.ctx.stroke(); this.ctx.restore(); 
+    }
 };
 
 // --- 3. GAME ---
@@ -96,14 +132,11 @@ const Game = {
         document.getElementById('canvas-toolbar').style.display=this.conf.canvas?'flex':'none';
         document.getElementById('score-only').style.display=this.conf.canvas?'none':'flex';
         
-        // Fix resize bug on display block
         CanvasManager.resize();
         this.next();
     },
     next() {
         this.state.revealed=false;
-        
-        // Calc difficulty
         this.state.phase = Math.min(5, Math.floor(this.state.score/5)+1);
         let qty=1;
         if(this.conf.time || this.conf.trace) { if(this.state.phase>=3) qty=2; }
@@ -111,7 +144,6 @@ const Game = {
         let t = 15 - (this.state.phase*1.5); if(t<4) t=4;
         this.timer.max = Math.ceil(t*qty);
 
-        // Generate
         const seq=[];
         for(let i=0;i<qty;i++){
             let c,s=0; do{c=this.state.pool[Math.floor(Math.random()*this.state.pool.length)];s++;}while(i>0&&c===seq[i-1]&&this.state.pool.length>5&&s<10);
@@ -119,7 +151,6 @@ const Game = {
         }
         this.state.current=seq;
 
-        // UI Reset
         document.getElementById('romaji-display').innerText = seq.map(x=>x.r.toUpperCase()).join(' • ');
         document.getElementById('phase-badge').innerText = `RANGO: ${this.state.phase}`;
         document.getElementById('manual-audio-btn').style.display='none';
@@ -210,7 +241,6 @@ const Game = {
         this.playAudio();
         document.getElementById('manual-audio-btn').style.display='block';
         await this.loadSvgs(false);
-        // Force SVG visible
         document.getElementById('svg-container').style.opacity = '1';
     },
     playAudio() {
