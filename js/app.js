@@ -1,365 +1,223 @@
 /**
- * DOJO DE KANA - Lógica Principal v3
- * Incluye Modo Trazado (Aprendizaje)
+ * KANA RUSH - Game Engine (Integrado)
+ * Usa IDs únicos (arcade-*) para convivir con el modo práctica
  */
 
-// --- 0. GESTOR DE AUDIO ---
-const AudioManager = {
-    synth: window.speechSynthesis,
-    voice: null,
-    enabled: true,
-    init() { if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => this.loadVoice(); this.loadVoice(); },
-    loadVoice() { const voices = this.synth.getVoices(); this.voice = voices.find(v => v.lang === 'ja-JP') || voices.find(v => v.lang.includes('ja')); },
-    speak(text) {
-        if (!this.enabled || !this.voice) return;
-        this.synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.voice = this.voice; u.rate = 0.9; u.pitch = 1;
-        this.synth.speak(u);
-    }
-};
-
-// --- 1. GESTOR DE ALMACENAMIENTO ---
-const Storage = {
-    KEY_SETTINGS: 'kana_dojo_settings_v3',
-    KEY_HIGHSCORE: 'kana_dojo_highscore',
-    saveSettings(settings) { localStorage.setItem(this.KEY_SETTINGS, JSON.stringify(settings)); },
-    loadSettings() { const data = localStorage.getItem(this.KEY_SETTINGS); return data ? JSON.parse(data) : null; },
-    getHighScore() { return parseInt(localStorage.getItem(this.KEY_HIGHSCORE) || '0'); },
-    setHighScore(score) {
-        if (score > this.getHighScore()) { localStorage.setItem(this.KEY_HIGHSCORE, score); return true; }
-        return false;
-    }
-};
-
-// --- 2. GESTOR DE CANVAS ---
-const CanvasManager = {
-    canvas: document.getElementById('writeCanvas'),
-    ctx: document.getElementById('writeCanvas').getContext('2d'),
+// --- CANVAS MANAGER (Arcade Version) ---
+const ArcadeCanvas = {
+    el: null, // Se asigna en init
+    ctx: null,
     isDrawing: false, isActive: true,
+    
     init() {
-        this.resize(); window.addEventListener('resize', () => this.resize());
-        ['mousedown','touchstart'].forEach(evt => this.canvas.addEventListener(evt, (e) => { e.preventDefault(); this.startDraw(e.touches?e.touches[0]:e); }));
-        ['mouseup','touchend'].forEach(evt => this.canvas.addEventListener(evt, () => this.endDraw()));
-        ['mousemove','touchmove'].forEach(evt => this.canvas.addEventListener(evt, (e) => { e.preventDefault(); this.draw(e.touches?e.touches[0]:e); }));
+        this.el = document.getElementById('arcadeCanvas');
+        if(!this.el) return;
+        this.ctx = this.el.getContext('2d');
+        this.resize();
+        
+        ['mousedown','touchstart'].forEach(e=>this.el.addEventListener(e, ev=>this.start(ev)));
+        ['mouseup','touchend'].forEach(e=>this.el.addEventListener(e, ()=>this.stop()));
+        ['mousemove','touchmove'].forEach(e=>this.el.addEventListener(e, ev=>this.draw(ev)));
+        
         this.ctx.lineWidth = 6; this.ctx.lineCap = 'round'; this.ctx.strokeStyle = '#333';
     },
     resize() {
-        const rect = this.canvas.parentElement.getBoundingClientRect();
-        this.canvas.width = rect.width; this.canvas.height = rect.height;
+        if(!this.el) return;
+        const r = this.el.parentElement.getBoundingClientRect();
+        this.el.width = r.width; this.el.height = r.height;
         this.ctx.lineWidth = 6; this.ctx.lineCap = 'round'; this.ctx.strokeStyle = '#333';
     },
-    getPos(e) { const r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; },
-    startDraw(e) { if (!this.isActive) return; this.isDrawing = true; this.ctx.beginPath(); const p = this.getPos(e); this.ctx.moveTo(p.x, p.y); },
-    draw(e) { if (!this.isDrawing || !this.isActive) return; const p = this.getPos(e); this.ctx.lineTo(p.x, p.y); this.ctx.stroke(); },
-    endDraw() { this.isDrawing = false; },
-    clear() { this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); },
-    drawGuides(count) {
-        if (!this.isActive || count <= 1) return;
-        this.ctx.save(); this.ctx.strokeStyle = '#e0e0e0'; this.ctx.lineWidth = 2; this.ctx.setLineDash([5, 5]);
-        const w = this.canvas.width / count;
-        this.ctx.beginPath();
-        for (let i = 1; i < count; i++) { this.ctx.moveTo(w*i, 0); this.ctx.lineTo(w*i, this.canvas.height); }
-        this.ctx.stroke(); this.ctx.restore();
+    pos(ev) {
+        const r = this.el.getBoundingClientRect();
+        const t = ev.touches ? ev.touches[0] : ev;
+        return { x: t.clientX - r.left, y: t.clientY - r.top };
     },
-    toggle(active) { this.isActive = active; this.canvas.style.display = active ? 'block' : 'none'; }
+    start(ev) { if(!this.isActive)return; ev.preventDefault(); this.isDrawing=true; this.ctx.beginPath(); const p=this.pos(ev); this.ctx.moveTo(p.x, p.y); },
+    draw(ev) { if(!this.isDrawing)return; ev.preventDefault(); const p=this.pos(ev); this.ctx.lineTo(p.x, p.y); this.ctx.stroke(); },
+    stop() { this.isDrawing=false; },
+    clear() { if(this.ctx) this.ctx.clearRect(0,0,this.el.width,this.el.height); },
+    toggle(on) { this.isActive = on; }
 };
 
-// --- 3. LÓGICA DEL JUEGO ---
-const Game = {
-    state: { mode: 'hiragana', score: 0, highScore: 0, phase: 1, pool: [], currentChallenge: [], isRevealed: false },
-    settings: { timeMode: false, canvasMode: true, audioMode: true, traceMode: false, selectedRows: [] },
-    timer: { interval: null, max: 15, current: 15 },
+// --- GAME LOGIC ---
+const KanaRush = {
+    db: typeof kanaDB !== 'undefined' ? kanaDB : [],
+    mode: 'hiragana',
+    
+    score: 0, lives: 3, combo: 1.0, maxCombo: 1.0, level: 1, correctCount: 0,
+    timer: null, timeLimit: 10, timeLeft: 10, currentKana: null, isPlaying: false,
 
     init() {
-        AudioManager.init();
-        this.loadUserPreferences();
-        this.bindEvents();
-        CanvasManager.init();
-        this.updateHighScoreUI();
+        ArcadeCanvas.init();
+        window.addEventListener('resize', () => ArcadeCanvas.resize());
     },
 
-    loadUserPreferences() {
-        const saved = Storage.loadSettings();
-        if (saved) {
-            this.setMode(saved.mode);
-            document.getElementById('time-mode-toggle').checked = saved.timeMode;
-            document.getElementById('canvas-mode-toggle').checked = saved.canvasMode;
-            document.getElementById('audio-mode-toggle').checked = saved.audioMode ?? true;
-            document.getElementById('trace-mode-toggle').checked = saved.traceMode ?? false; // Nuevo
-            if (saved.selectedRows?.length > 0) {
-                document.querySelectorAll('.checkbox-grid input').forEach(cb => cb.checked = false);
-                saved.selectedRows.forEach(val => { const el = document.querySelector(`input[value="${val}"]`); if(el) el.checked=true; });
-            }
-        } else this.setMode('hiragana');
-        this.state.highScore = Storage.getHighScore();
+    setMode(m) {
+        this.mode = m;
+        // Los botones visuales se gestionan en index.html, aquí solo guardamos el estado
     },
 
-    saveUserPreferences() {
-        const selectedRows = Array.from(document.querySelectorAll('.checkbox-grid input:checked')).map(cb => cb.value);
-        Storage.saveSettings({
-            mode: this.state.mode,
-            timeMode: document.getElementById('time-mode-toggle').checked,
-            canvasMode: document.getElementById('canvas-mode-toggle').checked,
-            audioMode: document.getElementById('audio-mode-toggle').checked,
-            traceMode: document.getElementById('trace-mode-toggle').checked,
-            selectedRows: selectedRows
-        });
-    },
-
-    bindEvents() {
-        document.getElementById('btn-start').onclick = () => this.start();
-        document.getElementById('setup-screen').addEventListener('change', () => this.saveUserPreferences());
-    },
-
-    setMode(mode) {
-        this.state.mode = mode;
-        document.getElementById('btn-hira').classList.toggle('active', mode === 'hiragana');
-        document.getElementById('btn-kata').classList.toggle('active', mode === 'katakana');
-        this.saveUserPreferences();
+    getLevelParams() {
+        // Nivel 1: Vocales (10s)
+        if (this.level === 1) return { t: 10, f: k => k.g === 'row-a' };
+        // Nivel 2: + K, S, T (8s)
+        if (this.level === 2) return { t: 8, f: k => ['row-a','row-k','row-s','row-t'].includes(k.g) };
+        // Nivel 3: + N, H, M, Y (7s)
+        if (this.level === 3) return { t: 7, f: k => !['row-r','row-w','dakuten'].includes(k.g) };
+        // Nivel 4: Todo Seion (6s)
+        if (this.level === 4) return { t: 6, f: k => k.g !== 'dakuten' };
+        // Nivel 5+: Todo (5s...)
+        let t = Math.max(3, 5 - (this.level - 5)*0.2);
+        return { t: t, f: k => true };
     },
 
     start() {
-        const checkboxes = document.querySelectorAll('.checkbox-grid input:checked');
-        const selectedGroups = Array.from(checkboxes).map(cb => cb.value);
-        this.state.pool = kanaDB.filter(item => selectedGroups.includes(item.g));
-        if (this.state.pool.length === 0) return alert("Selecciona al menos una fila");
+        this.score = 0; this.lives = 3; this.combo = 1.0; this.level = 1; this.correctCount = 0; this.isPlaying = true;
 
-        // Leer settings
-        this.settings.timeMode = document.getElementById('time-mode-toggle').checked;
-        this.settings.canvasMode = document.getElementById('canvas-mode-toggle').checked;
-        this.settings.audioMode = document.getElementById('audio-mode-toggle').checked;
-        this.settings.traceMode = document.getElementById('trace-mode-toggle').checked;
-        
-        // En modo trazado, desactivamos tiempo
-        if (this.settings.traceMode) this.settings.timeMode = false;
-
-        AudioManager.enabled = this.settings.audioMode;
-        this.state.score = 0;
-        this.state.phase = 1;
-        
         document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('practice-screen').style.display = 'flex';
+        document.getElementById('arcade-screen').style.display = 'block';
         
-        this.setupWorkspace();
-        this.nextTurn();
-    },
-
-    setupWorkspace() {
-        CanvasManager.toggle(this.settings.canvasMode);
-        document.getElementById('canvas-toolbar').style.display = this.settings.canvasMode ? 'flex' : 'none';
-        document.getElementById('score-only').style.display = this.settings.canvasMode ? 'none' : 'flex';
-        document.getElementById('instruction-text').innerText = this.settings.traceMode ? "Repasa sobre la guía" : "Escribe de memoria";
-    },
-
-    updateUI() {
-        this.state.phase = Math.min(5, Math.floor(this.state.score / 5) + 1);
-        let t = `Nivel ${this.state.phase}`;
-        if(this.state.phase>=3) t+=" (Combos)";
-        document.getElementById('phase-badge').innerText = t;
-        const s = `Score: ${this.state.score}`;
-        document.getElementById('counter').innerText = s;
-        document.getElementById('counter-alt').innerText = s;
-    },
-
-    generateChallenge() {
-        this.updateUI();
-        let qty = 1;
-        if (this.settings.timeMode) {
-            if(this.state.phase>=3) qty=2; if(this.state.phase>=5) qty=3;
-        } else if (this.settings.traceMode) {
-             // En modo trazado, también permitimos combos simples progresivos
-            if(this.state.phase>=3) qty=2;
-        }
-
-        let timePerKana = 15 - (this.state.phase*1.5);
-        if(timePerKana<4) timePerKana=4;
-        this.timer.max = Math.ceil(timePerKana * qty);
-
-        const seq = [];
-        for(let i=0; i<qty; i++) {
-            let c, safe=0;
-            do { c = this.state.pool[Math.floor(Math.random()*this.state.pool.length)]; safe++; 
-                 if(i>0 && c===seq[i-1] && this.state.pool.length>5) c=null; 
-            } while(!c && safe<10);
-            if(c) seq.push(c);
-        }
-        return seq;
-    },
-
-    nextTurn() {
-        this.state.currentChallenge = this.generateChallenge();
-        this.state.isRevealed = false;
-
-        // UI Reset
-        document.getElementById('romaji-display').innerText = this.state.currentChallenge.map(c=>c.r.toUpperCase()).join(' • ');
-        document.getElementById('manual-audio-btn').style.display = 'none';
+        // Resize canvas after showing (important!)
+        ArcadeCanvas.resize();
         
-        const svgCont = document.getElementById('svg-container');
+        this.updateHUD();
+        this.nextRound();
+    },
+
+    nextRound() {
+        if (!this.isPlaying) return;
+
+        const params = this.getLevelParams();
+        this.timeLimit = params.t;
+        const pool = this.db.filter(params.f);
+        this.currentKana = pool[Math.floor(Math.random() * pool.length)];
+        
+        // UI Setup
+        document.getElementById('arcade-enemy').innerText = this.currentKana.r.toUpperCase();
+        document.getElementById('arcade-action-area').style.display = 'flex';
+        document.getElementById('arcade-eval-area').style.display = 'none';
+        
+        const svgCont = document.getElementById('arcade-svg-container');
         svgCont.innerHTML = '';
-        svgCont.classList.remove('visible');
-        document.getElementById('workspace').classList.remove('failed', 'shake', 'success-pulse');
-        document.getElementById('default-actions').style.display = 'flex';
-        document.getElementById('evaluation-actions').style.display = 'none';
-        document.getElementById('replay-btn').style.display = 'none';
-
-        // Botón
-        const btn = document.getElementById('action-btn');
-        btn.innerText = "Ver Respuesta";
-        btn.classList.remove('btn-main', 'btn-outline');
-        btn.classList.add('btn-main');
-
-        // Canvas Clear
-        if (this.settings.canvasMode) {
-            CanvasManager.clear();
-            CanvasManager.drawGuides(this.state.currentChallenge.length);
-        }
-
-        // --- LÓGICA MODO TRAZADO ---
-        if (this.settings.traceMode) {
-            // Cargar SVGs inmediatamente como "Ghost"
-            this.loadSVGs(true); 
-            this.playCurrentAudio();
-            document.getElementById('manual-audio-btn').style.display = 'block';
-            btn.innerText = "Siguiente >";
-            this.state.isRevealed = true; // Ya está revelado técnicamente
-        } else {
-            this.startTimer();
-        }
-    },
-
-    // Nueva función helper para cargar SVGs
-    async loadSVGs(isGhost = false) {
-        const container = document.getElementById('svg-container');
-        container.classList.add('visible');
+        svgCont.classList.remove('visible'); // Custom style needed?
+        svgCont.style.opacity = '0';
         
-        const promises = this.state.currentChallenge.map(item => {
-            const char = this.state.mode === 'hiragana' ? item.h : item.k;
-            const hex = char.codePointAt(0).toString(16).padStart(5, '0');
-            const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg/kanji/${hex}.svg`;
-            return fetch(url).then(r => r.ok ? r.text() : null).catch(()=>null);
-        });
+        ArcadeCanvas.clear();
+        ArcadeCanvas.toggle(true);
 
-        const results = await Promise.all(promises);
-        container.innerHTML = '';
-        
-        results.forEach((svg, idx) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'svg-char';
-            if (isGhost) wrapper.classList.add('ghost'); // Añadir clase ghost
-            
-            if (svg) {
-                wrapper.innerHTML = svg;
-                const el = wrapper.querySelector('svg');
-                el.removeAttribute('width'); el.removeAttribute('height');
-            } else {
-                const item = this.state.currentChallenge[idx];
-                const char = this.state.mode === 'hiragana' ? item.h : item.k;
-                wrapper.innerHTML = `<div style="font-size:3rem;font-family:'Klee One'">${char}</div>`;
-            }
-            container.appendChild(wrapper);
-        });
+        this.startTimer();
     },
 
     startTimer() {
-        if (!this.settings.timeMode) {
-            document.getElementById('timer-container').style.display = 'none';
-            document.getElementById('timer-badge').style.display = 'none';
-            return;
-        }
-        this.stopTimer();
-        this.timer.current = this.timer.max;
-        const uiBar = document.getElementById('timer-bar');
-        const uiBadge = document.getElementById('timer-badge');
-        document.getElementById('timer-container').style.display = 'block';
-        uiBadge.style.display = 'block';
-        uiBar.style.width = '100%'; uiBar.style.background = 'var(--secondary)';
-        uiBadge.innerText = Math.ceil(this.timer.current) + 's';
-
-        this.timer.interval = setInterval(() => {
-            this.timer.current -= 0.1;
-            const pct = (this.timer.current / this.timer.max) * 100;
-            uiBar.style.width = `${pct}%`;
-            if (pct < 30) uiBar.style.background = 'var(--danger)';
-            if (Math.abs(Math.round(this.timer.current) - this.timer.current) < 0.15) uiBadge.innerText = Math.ceil(this.timer.current) + 's';
-            if (this.timer.current <= 0) this.timeUp();
+        if(this.timer) clearInterval(this.timer);
+        this.timeLeft = this.timeLimit;
+        const bar = document.getElementById('arcade-timer');
+        bar.className = 'rush-fill'; 
+        
+        this.timer = setInterval(() => {
+            this.timeLeft -= 0.1;
+            const pct = (this.timeLeft / this.timeLimit) * 100;
+            bar.style.width = `${pct}%`;
+            if (pct < 30) bar.classList.add('danger');
+            if (this.timeLeft <= 0) this.timeUp();
         }, 100);
     },
 
-    stopTimer() { if (this.timer.interval) clearInterval(this.timer.interval); },
+    checkAnswer() {
+        clearInterval(this.timer);
+        ArcadeCanvas.toggle(false);
+        this.showSolution();
+        document.getElementById('arcade-action-area').style.display = 'none';
+        document.getElementById('arcade-eval-area').style.display = 'flex';
+    },
+
+    async showSolution() {
+        const char = this.mode === 'hiragana' ? this.currentKana.h : this.currentKana.k;
+        const hex = char.codePointAt(0).toString(16).padStart(5, '0');
+        const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg/kanji/${hex}.svg`;
+        const container = document.getElementById('arcade-svg-container');
+        
+        // Audio (opcional, reutilizando el manager de app.js si está cargado)
+        if(typeof AudioManager !== 'undefined') AudioManager.speak(char);
+
+        try {
+            const res = await fetch(url);
+            if(res.ok) {
+                container.innerHTML = await res.text();
+                const svg = container.querySelector('svg');
+                svg.removeAttribute('width'); svg.removeAttribute('height');
+                svg.style.width = '80%'; svg.style.height = '80%'; // Adjust size
+                
+                // SVG Styles for Arcade
+                const paths = svg.querySelectorAll('path');
+                paths.forEach(p => { 
+                    p.style.fill = 'none'; 
+                    p.style.stroke = '#E6007E'; 
+                    p.style.strokeWidth = '5'; 
+                    p.style.strokeLinecap = 'round';
+                    p.style.strokeLinejoin = 'round';
+                });
+                
+                container.style.opacity = '1';
+            } else {
+                container.innerHTML = `<div style="font-size:5rem; color:#ccc;">${char}</div>`;
+                container.style.opacity = '1';
+            }
+        } catch(e) {
+            container.innerHTML = `<div style="font-size:5rem; color:#ccc;">${char}</div>`;
+            container.style.opacity = '1';
+        }
+    },
+
+    resolveRound(isCorrect) {
+        if (isCorrect) {
+            const timeBonus = Math.ceil(this.timeLeft * 10);
+            const points = Math.ceil((100 + timeBonus) * this.combo);
+            this.score += points;
+            this.correctCount++;
+            
+            if (this.correctCount % 3 === 0) {
+                this.combo = parseFloat((this.combo + 0.1).toFixed(1));
+                if(this.combo > 3.0) this.combo = 3.0;
+            }
+            if(this.combo > this.maxCombo) this.maxCombo = this.combo;
+            if (this.correctCount % 5 === 0) this.level++;
+        } else {
+            this.lives--;
+            this.combo = 1.0;
+            document.querySelector('.game-hud').classList.add('shake');
+            setTimeout(()=>document.querySelector('.game-hud').classList.remove('shake'), 500);
+        }
+
+        this.updateHUD();
+
+        if (this.lives <= 0) {
+            this.gameOver();
+        } else {
+            setTimeout(() => this.nextRound(), 500);
+        }
+    },
 
     timeUp() {
-        this.stopTimer();
-        document.getElementById('timer-bar').style.width = '0%';
-        this.revealAnswer(true);
+        clearInterval(this.timer);
+        this.resolveRound(false);
     },
 
-    handleAction() {
-        if (this.settings.traceMode) {
-            // En modo trazado, el botón es "Siguiente", así que simplemente pasamos
-            this.markResult(true); // Asumimos correcto porque es práctica
-        } else {
-            if (!this.state.isRevealed) this.revealAnswer(false);
-            else this.nextTurn();
-        }
+    updateHUD() {
+        document.getElementById('arcade-score').innerText = this.score;
+        document.getElementById('arcade-combo').innerText = `x${this.combo.toFixed(1)}`;
+        let hearts = "";
+        for(let i=0; i<this.lives; i++) hearts += "❤️";
+        for(let i=this.lives; i<3; i++) hearts += "🖤";
+        document.getElementById('arcade-lives').innerHTML = hearts;
     },
 
-    markResult(correct) {
-        const workspace = document.getElementById('workspace');
-        if (correct) {
-            this.state.score++;
-            workspace.classList.add('success-pulse');
-            if (Storage.setHighScore(this.state.score)) {
-                this.state.highScore = this.state.score;
-                this.updateHighScoreUI();
-            }
-        } else {
-            this.state.score = Math.max(0, this.state.score - 1);
-            workspace.classList.add('failed', 'shake');
-        }
-        this.updateUI();
-        setTimeout(() => this.nextTurn(), 600);
-    },
-
-    async revealAnswer(failed = false) {
-        this.stopTimer();
-        this.state.isRevealed = true;
-        
-        if (failed) {
-            this.state.score = Math.max(0, this.state.score - 1);
-            document.getElementById('workspace').classList.add('failed', 'shake');
-            this.updateUI();
-            document.getElementById('action-btn').innerText = "Tiempo Agotado (Continuar)";
-        } else {
-            document.getElementById('default-actions').style.display = 'none';
-            document.getElementById('evaluation-actions').style.display = 'flex';
-        }
-
-        this.playCurrentAudio();
-        document.getElementById('manual-audio-btn').style.display = 'block';
-        document.getElementById('replay-btn').style.display = 'block';
-
-        // Cargar SVGs normales
-        await this.loadSVGs(false);
-        this.animateStrokeOrder();
-    },
-
-    playCurrentAudio() {
-        const t = this.state.currentChallenge.map(i=>this.state.mode==='hiragana'?i.h:i.k).join('。');
-        AudioManager.speak(t);
-    },
-
-    animateStrokeOrder() {
-        const paths = document.querySelectorAll('#svg-container path');
-        paths.forEach(p => { p.style.transition = 'none'; p.style.strokeDasharray = '1000'; p.style.strokeDashoffset = '1000'; });
-        void document.getElementById('svg-container').offsetWidth;
-        let delay = 0;
-        paths.forEach(p => { setTimeout(() => { p.style.transition = 'stroke-dashoffset 600ms ease-out'; p.style.strokeDashoffset = '0'; }, delay); delay += 150; });
-    },
-
-    replayAnimation() { this.animateStrokeOrder(); },
-    updateHighScoreUI() { const t = `🏆 Best: ${this.state.highScore}`; document.getElementById('high-score-display').innerText = t; document.getElementById('high-score-display-alt').innerText = t; },
-    exit() { this.stopTimer(); document.getElementById('practice-screen').style.display = 'none'; document.getElementById('setup-screen').style.display = 'block'; }
+    gameOver() {
+        this.isPlaying = false;
+        document.getElementById('final-score').innerText = this.score;
+        document.getElementById('final-combo').innerText = `x${this.maxCombo.toFixed(1)}`;
+        document.getElementById('game-over-modal').style.display = 'flex';
+    }
 };
 
-window.onload = () => Game.init();
+window.addEventListener('load', () => KanaRush.init());
