@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dojo de Kana - Gamified</title>
+    <!-- Fuentes Externas -->
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Hoja de Estilos Propia -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>Dojo de Escritura</h1>
+        <p style="margin:5px; color:#666;">Selecciona • Escribe • Anima</p>
+    </header>
+
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen">
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-hira" onclick="setMode('hiragana')">Hiragana (あ)</button>
+            <button class="toggle-btn" id="btn-kata" onclick="setMode('katakana')">Katakana (ア)</button>
+        </div>
+
+        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">1. Selecciona Filas</h3>
+        
+        <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" value="row-a" checked> Vocales</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-s"> S</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-t"> T</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-n"> N</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-h"> H</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-m"> M</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-y"> Y</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-r"> R</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-w"> W/N</label>
+            <label class="checkbox-item"><input type="checkbox" value="dakuten"> Sonoros</label>
+        </div>
+
+        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">2. Modos de Juego</h3>
+        
+        <div class="challenge-box">
+            <div>
+                <strong>⏱️ Modo Contrareloj (Progresivo)</strong><br>
+                <small style="color:#666">Nuevos retos cada 5 aciertos</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="time-mode-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Toggle de Pizarra -->
+        <div class="challenge-box blue">
+            <div>
+                <strong>✏️ Usar Pizarra Digital</strong><br>
+                <small style="color:#666">Dibujar en pantalla (Desactívalo si usas papel)</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="canvas-mode-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn-main" onclick="startPractice()">✏️ Empezar Práctica</button>
+            <button class="btn-outline" onclick="generatePrintSheet()">🖨️ Generar PDF</button>
+        </div>
+    </div>
+
+    <!-- PRACTICE SCREEN -->
+    <div id="practice-screen">
+        
+        <!-- Timer UI -->
+        <div class="timer-container" id="timer-container">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+
+        <div style="position:relative; width: 100%; text-align: center;">
+            <div id="phase-badge" class="phase-badge">Nivel 1</div>
+            <div class="romaji-display" id="romaji-display">KA</div>
+            <div id="timer-badge" class="stats-badge">15s</div>
+        </div>
+
+        <p id="instruction-text" style="color:#888; margin-top:-5px; font-size: 0.9rem;">Escribe en las zonas asignadas</p>
+
+        <div class="toolbar" id="canvas-toolbar">
+            <button class="tool-btn" onclick="clearCanvas()">Borrar 🗑️</button>
+            <span style="flex:1"></span>
+            <span id="counter" style="color:#888; align-self:center; font-size:0.9rem;">Score: 0</span>
+        </div>
+        
+        <div id="score-only" style="display:none; color:#888; font-size:0.9rem; margin-bottom:10px;">Score: 0</div>
+
+        <div class="workspace" id="workspace">
+            <canvas id="writeCanvas" width="360" height="180"></canvas>
+            <!-- Contenedor para múltiples SVGs -->
+            <div id="svg-container"></div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn-outline" onclick="exitPractice()" style="flex:1">Salir</button>
+            <button class="btn-outline" id="replay-btn" onclick="animateStrokeOrder()" style="display:none; flex:1">Repetir ↺</button>
+            <button class="btn-main" id="action-btn" onclick="handleAction()" style="flex:2">Ver Respuesta</button>
+        </div>
+    </div>
+
+    <!-- PRINT CONTAINER -->
+    <div id="print-container">
+        <h2 class="print-title">Hoja de Práctica</h2>
+        <div id="print-content"></div>
+    </div>
+
+    <!-- SCRIPTS (Orden Importante) -->
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
