@@ -19,8 +19,8 @@
     <!-- SETUP SCREEN -->
     <div id="setup-screen">
         <div class="toggle-group">
-            <button class="toggle-btn active" id="btn-hira" data-mode="hiragana">Hiragana (あ)</button>
-            <button class="toggle-btn" id="btn-kata" data-mode="katakana">Katakana (ア)</button>
+            <button class="toggle-btn active" id="btn-hira" onclick="Game.setMode('hiragana')">Hiragana (あ)</button>
+            <button class="toggle-btn" id="btn-kata" onclick="Game.setMode('katakana')">Katakana (ア)</button>
         </div>
 
         <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">1. Selecciona Filas</h3>
@@ -40,15 +40,28 @@
             <label class="checkbox-item"><input type="checkbox" value="dakuten"> Sonoros</label>
         </div>
 
-        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">2. Modos de Juego</h3>
+        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">2. Configuración</h3>
         
+        <!-- Contrareloj -->
         <div class="challenge-box">
             <div>
-                <strong>⏱️ Modo Contrareloj (Progresivo)</strong><br>
-                <small style="color:#666">Nuevos retos cada 5 aciertos</small>
+                <strong>⏱️ Modo Contrareloj</strong><br>
+                <small style="color:#666">Retos progresivos</small>
             </div>
             <label class="switch">
                 <input type="checkbox" id="time-mode-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Toggle de Audio -->
+        <div class="challenge-box">
+            <div>
+                <strong>🔊 Audio de Pronunciación</strong><br>
+                <small style="color:#666">Escuchar al revelar respuesta</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="audio-mode-toggle" checked>
                 <span class="slider"></span>
             </label>
         </div>
@@ -81,7 +94,13 @@
 
         <div style="position:relative; width: 100%; text-align: center;">
             <div id="phase-badge" class="phase-badge">Nivel 1</div>
-            <div class="romaji-display" id="romaji-display">KA</div>
+            
+             <!-- Contenedor Romaji + Botón Audio -->
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <div class="romaji-display" id="romaji-display">KA</div>
+                <button id="manual-audio-btn" class="audio-btn" style="display:none;" onclick="Game.playCurrentAudio()">🔊</button>
+            </div>
+            
             <div id="timer-badge" class="stats-badge">15s</div>
         </div>
 
