@@ -128,10 +128,19 @@
             <div id="svg-container"></div>
         </div>
 
-        <div class="action-bar">
+        <!-- ACCIONES (MODIFICADO) -->
+        
+        <!-- 1. Estado inicial: Ver respuesta -->
+        <div class="action-bar" id="default-actions">
             <button class="btn-outline" onclick="Game.exit()">Salir</button>
-            <button class="btn-outline" id="replay-btn" onclick="Game.replayAnimation()" style="display:none; flex:1">Repetir ↺</button>
             <button class="btn-main" id="action-btn" onclick="Game.handleAction()" style="flex:2">Ver Respuesta</button>
+        </div>
+
+        <!-- 2. Estado evaluación: Bien/Mal -->
+        <div class="action-bar" id="evaluation-actions" style="display:none;">
+            <button class="btn-outline" style="border-color:var(--danger); color:var(--danger);" onclick="Game.markResult(false)">❌ Mal</button>
+            <button class="btn-outline" onclick="Game.replayAnimation()">↺</button>
+            <button class="btn-main" style="background:var(--secondary); border-color:var(--secondary);" onclick="Game.markResult(true)">✅ Bien</button>
         </div>
     </div>
 
