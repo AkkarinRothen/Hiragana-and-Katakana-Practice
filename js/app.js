@@ -1,374 +1,494 @@
-// --- GAME STATE ---
-let currentMode = 'hiragana';
-let availablePool = [];
-let currentChallenge = [];
-let isRevealed = false;
-let score = 0;
-let gamePhase = 1; 
+/**
+ * DOJO DE KANA - Lógica Principal
+ * Estructura modular para mejor mantenimiento y persistencia
+ */
 
-// Timer & Settings
-let isTimeMode = false;
-let isCanvasMode = true; 
-let maxTime = 15;
-let currentTime = 15;
-let timerInterval = null;
+// --- 1. GESTOR DE ALMACENAMIENTO (Persistence) ---
+const Storage = {
+    KEY_SETTINGS: 'kana_dojo_settings',
+    KEY_HIGHSCORE: 'kana_dojo_highscore',
 
-// Canvas
-const canvas = document.getElementById('writeCanvas');
-const ctx = canvas.getContext('2d');
-let isDrawing = false;
+    // Guardar preferencias del usuario
+    saveSettings(settings) {
+        localStorage.setItem(this.KEY_SETTINGS, JSON.stringify(settings));
+    },
 
-// --- SETUP LOGIC ---
-function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('btn-hira').classList.toggle('active', mode === 'hiragana');
-    document.getElementById('btn-kata').classList.toggle('active', mode === 'katakana');
-}
+    // Cargar preferencias
+    loadSettings() {
+        const data = localStorage.getItem(this.KEY_SETTINGS);
+        return data ? JSON.parse(data) : null;
+    },
 
-function startPractice() {
-    // 1. Obtener filas
-    const checkboxes = document.querySelectorAll('.checkbox-grid input:checked');
-    const selectedGroups = Array.from(checkboxes).map(cb => cb.value);
-    availablePool = kanaDB.filter(item => selectedGroups.includes(item.g));
+    // Gestión de High Score
+    getHighScore() {
+        return parseInt(localStorage.getItem(this.KEY_HIGHSCORE) || '0');
+    },
 
-    if (availablePool.length === 0) return alert("Selecciona al menos una fila");
-
-    // 2. Configuración Juego
-    isTimeMode = document.getElementById('time-mode-toggle').checked;
-    isCanvasMode = document.getElementById('canvas-mode-toggle').checked; 
-    
-    score = 0;
-    gamePhase = 1;
-
-    document.getElementById('setup-screen').style.display = 'none';
-    document.getElementById('practice-screen').style.display = 'flex';
-    
-    // Configurar UI según modo pizarra
-    if (isCanvasMode) {
-        document.getElementById('canvas-toolbar').style.display = 'flex';
-        document.getElementById('score-only').style.display = 'none';
-        document.getElementById('writeCanvas').style.display = 'block';
-        document.getElementById('instruction-text').innerText = "Escribe en las zonas asignadas";
-        initCanvas();
-    } else {
-        document.getElementById('canvas-toolbar').style.display = 'none';
-        document.getElementById('score-only').style.display = 'block';
-        document.getElementById('writeCanvas').style.display = 'none'; 
-        document.getElementById('instruction-text').innerText = "Escribe en tu papel";
+    setHighScore(score) {
+        const current = this.getHighScore();
+        if (score > current) {
+            localStorage.setItem(this.KEY_HIGHSCORE, score);
+            return true; // Nuevo record
+        }
+        return false;
     }
+};
 
-    nextTurn();
-}
+// --- 2. GESTOR DE CANVAS (Pizarra) ---
+const CanvasManager = {
+    canvas: document.getElementById('writeCanvas'),
+    ctx: document.getElementById('writeCanvas').getContext('2d'),
+    isDrawing: false,
+    isActive: true,
 
-function exitPractice() {
-    stopTimer();
-    document.getElementById('practice-screen').style.display = 'none';
-    document.getElementById('setup-screen').style.display = 'block';
-}
+    init() {
+        // Ajustar resolución
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
 
-// --- CORE GAME LOGIC ---
-
-function updatePhase() {
-    gamePhase = Math.floor(score / 5) + 1;
-    if (gamePhase > 5) gamePhase = 5;
-    
-    let phaseText = `Nivel ${gamePhase}`;
-    if(gamePhase >= 3) phaseText += " (Combos)";
-    if(gamePhase >= 5) phaseText += " (Experto)";
-    document.getElementById('phase-badge').innerText = phaseText;
-    
-    document.getElementById('counter').innerText = `Score: ${score}`;
-    document.getElementById('score-only').innerText = `Score: ${score}`;
-}
-
-function generateNextChallenge() {
-    updatePhase();
-
-    let quantity = 1;
-    if (isTimeMode) {
-        if (gamePhase >= 3) quantity = 2;
-        if (gamePhase >= 5) quantity = 3;
-    }
-
-    let timePerKana = 15 - (gamePhase * 1.5); 
-    if (timePerKana < 4) timePerKana = 4;
-    maxTime = Math.ceil(timePerKana * quantity);
-
-    const sequence = [];
-    
-    for (let i = 0; i < quantity; i++) {
-        let candidate;
-        let attempts = 0;
+        // Eventos
+        this.canvas.addEventListener('mousedown', (e) => this.startDraw(e));
+        this.canvas.addEventListener('mouseup', () => this.endDraw());
+        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
         
-        do {
-            candidate = availablePool[Math.floor(Math.random() * availablePool.length)];
-            attempts++;
+        // Touch events
+        this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); this.startDraw(e.touches[0]); });
+        this.canvas.addEventListener('touchend', () => this.endDraw());
+        this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); this.draw(e.touches[0]); });
+
+        // Configuración de trazo
+        this.ctx.lineWidth = 6;
+        this.ctx.lineCap = 'round';
+        this.ctx.strokeStyle = '#333';
+    },
+
+    resize() {
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+        // Reiniciar estilos de contexto tras resize
+        this.ctx.lineWidth = 6;
+        this.ctx.lineCap = 'round';
+        this.ctx.strokeStyle = '#333';
+    },
+
+    getPos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return { 
+            x: e.clientX - rect.left, 
+            y: e.clientY - rect.top 
+        };
+    },
+
+    startDraw(e) {
+        if (!this.isActive) return;
+        this.isDrawing = true;
+        this.ctx.beginPath();
+        const p = this.getPos(e);
+        this.ctx.moveTo(p.x, p.y);
+    },
+
+    draw(e) {
+        if (!this.isDrawing || !this.isActive) return;
+        const p = this.getPos(e);
+        this.ctx.lineTo(p.x, p.y);
+        this.ctx.stroke();
+    },
+
+    endDraw() { this.isDrawing = false; },
+
+    clear() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+
+    drawGuides(count) {
+        if (!this.isActive || count <= 1) return;
+        
+        this.ctx.save();
+        this.ctx.strokeStyle = '#e0e0e0';
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]);
+        
+        const sectionWidth = this.canvas.width / count;
+        
+        this.ctx.beginPath();
+        for (let i = 1; i < count; i++) {
+            const x = sectionWidth * i;
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+        }
+        this.ctx.stroke();
+        this.ctx.restore();
+    },
+
+    toggle(active) {
+        this.isActive = active;
+        this.canvas.style.display = active ? 'block' : 'none';
+    }
+};
+
+// --- 3. LÓGICA DEL JUEGO (Game Engine) ---
+const Game = {
+    state: {
+        mode: 'hiragana', // hiragana | katakana
+        score: 0,
+        highScore: 0,
+        phase: 1,
+        pool: [],
+        currentChallenge: [],
+        isRevealed: false
+    },
+    
+    settings: {
+        timeMode: false,
+        canvasMode: true,
+        selectedRows: []
+    },
+
+    timer: {
+        interval: null,
+        max: 15,
+        current: 15
+    },
+
+    // --- INICIALIZACIÓN ---
+    init() {
+        this.loadUserPreferences();
+        this.bindEvents();
+        CanvasManager.init();
+        this.updateHighScoreUI();
+    },
+
+    loadUserPreferences() {
+        const saved = Storage.loadSettings();
+        if (saved) {
+            // Restaurar Mode
+            this.setMode(saved.mode);
             
-            let bad = false;
-            if (i >= 2) {
-                if (candidate === sequence[i-1] && candidate === sequence[i-2]) bad = true;
+            // Restaurar Toggles
+            document.getElementById('time-mode-toggle').checked = saved.timeMode;
+            document.getElementById('canvas-mode-toggle').checked = saved.canvasMode;
+            
+            // Restaurar Checkboxes
+            if (saved.selectedRows && saved.selectedRows.length > 0) {
+                // Primero desmarcar todo
+                document.querySelectorAll('.checkbox-grid input').forEach(cb => cb.checked = false);
+                // Marcar guardados
+                saved.selectedRows.forEach(val => {
+                    const el = document.querySelector(`input[value="${val}"]`);
+                    if (el) el.checked = true;
+                });
             }
-            if (availablePool.length > 10 && i > 0) {
-                if (candidate === sequence[i-1]) bad = true;
-            }
-
-        } while (attempts < 10 && candidate === undefined);
-
-        sequence.push(candidate);
-    }
-    
-    return sequence;
-}
-
-function nextTurn() {
-    currentChallenge = generateNextChallenge();
-    loadCardUI();
-}
-
-function loadCardUI() {
-    isRevealed = false;
-    
-    const romajiString = currentChallenge.map(c => c.r.toUpperCase()).join(' • ');
-    document.getElementById('romaji-display').innerText = romajiString;
-
-    const svgContainer = document.getElementById('svg-container');
-    svgContainer.innerHTML = '';
-    svgContainer.classList.remove('visible');
-    document.getElementById('workspace').classList.remove('failed'); 
-    
-    const btn = document.getElementById('action-btn');
-    btn.innerText = "Ver Respuesta";
-    btn.classList.remove('btn-outline');
-    btn.classList.add('btn-main');
-    document.getElementById('replay-btn').style.display = 'none';
-
-    if (isCanvasMode) {
-        clearCanvas();
-        drawCanvasGuides(currentChallenge.length);
-    }
-
-    startTimer();
-}
-
-// --- CANVAS HELPERS ---
-function drawCanvasGuides(count) {
-    if (count <= 1) return;
-    
-    ctx.strokeStyle = '#e0e0e0';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    
-    const sectionWidth = canvas.width / count;
-    
-    ctx.beginPath();
-    for (let i = 1; i < count; i++) {
-        const x = sectionWidth * i;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-    }
-    ctx.stroke();
-    
-    ctx.setLineDash([]);
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 8;
-}
-
-// --- TIMER LOGIC ---
-function startTimer() {
-    if (!isTimeMode) {
-        document.getElementById('timer-container').style.display = 'none';
-        document.getElementById('timer-badge').style.display = 'none';
-        return;
-    }
-
-    currentTime = maxTime;
-    const timerBar = document.getElementById('timer-bar');
-    const timerBadge = document.getElementById('timer-badge');
-    
-    document.getElementById('timer-container').style.display = 'block';
-    timerBadge.style.display = 'block';
-    timerBadge.innerText = `${Math.ceil(currentTime)}s`;
-    timerBar.style.width = '100%';
-    timerBar.style.background = 'var(--secondary)';
-
-    stopTimer(); 
-
-    timerInterval = setInterval(() => {
-        currentTime -= 0.1;
-        const percentage = (currentTime / maxTime) * 100;
-        timerBar.style.width = `${percentage}%`;
-        
-        if (percentage < 30) timerBar.style.background = 'var(--danger)';
-        
-        if(Math.floor(currentTime*10)%10 === 0) {
-                timerBadge.innerText = `${Math.ceil(currentTime)}s`;
-        }
-
-        if (currentTime <= 0) {
-            timeUp();
-        }
-    }, 100);
-}
-
-function stopTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-}
-
-function timeUp() {
-    stopTimer();
-    document.getElementById('timer-bar').style.width = '0%';
-    revealAnswer(true); 
-}
-
-// --- REVEAL LOGIC ---
-function handleAction() {
-    if (!isRevealed) revealAnswer(false);
-    else {
-        score++;
-        nextTurn();
-    }
-}
-
-async function revealAnswer(failed = false) {
-    stopTimer();
-    isRevealed = true;
-    
-    const btn = document.getElementById('action-btn');
-    btn.innerText = failed ? "Tiempo Agotado (Continuar)" : "Correcto (Siguiente)";
-    if(failed) score = Math.max(0, score - 1);
-
-    document.getElementById('replay-btn').style.display = 'block';
-    
-    const container = document.getElementById('svg-container');
-    container.classList.add('visible');
-    if (failed) document.getElementById('workspace').classList.add('failed');
-
-    const promises = currentChallenge.map(item => {
-        const char = currentMode === 'hiragana' ? item.h : item.k;
-        const hex = char.codePointAt(0).toString(16).padStart(5, '0');
-        const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg/kanji/${hex}.svg`;
-        return fetch(url).then(res => res.ok ? res.text() : null).catch(() => null);
-    });
-
-    const results = await Promise.all(promises);
-
-    container.innerHTML = '';
-    results.forEach((svgText, index) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'svg-char';
-        
-        if (svgText) {
-            wrapper.innerHTML = svgText;
-            const svgElement = wrapper.querySelector('svg');
-            svgElement.removeAttribute('width');
-            svgElement.removeAttribute('height');
         } else {
-            const item = currentChallenge[index];
-            wrapper.innerHTML = `<div style="font-size:3rem; font-family:'Klee One'">${currentMode==='hiragana'?item.h:item.k}</div>`;
+            // Default setup
+            this.setMode('hiragana');
         }
-        container.appendChild(wrapper);
-    });
+        
+        this.state.highScore = Storage.getHighScore();
+    },
 
-    animateStrokeOrder();
-}
+    saveUserPreferences() {
+        const checkboxes = document.querySelectorAll('.checkbox-grid input:checked');
+        const selectedRows = Array.from(checkboxes).map(cb => cb.value);
+        
+        const settings = {
+            mode: this.state.mode,
+            timeMode: document.getElementById('time-mode-toggle').checked,
+            canvasMode: document.getElementById('canvas-mode-toggle').checked,
+            selectedRows: selectedRows
+        };
+        
+        Storage.saveSettings(settings);
+    },
 
-function animateStrokeOrder() {
-    const paths = document.querySelectorAll('#svg-container path');
-    
-    paths.forEach(p => {
-        p.style.transition = 'none';
-        p.style.strokeDasharray = '1000';
-        p.style.strokeDashoffset = '1000';
-    });
-    
-    void document.getElementById('svg-container').offsetWidth;
+    bindEvents() {
+        // Toggle de Modo (Hiragana/Katakana)
+        document.getElementById('btn-hira').onclick = () => this.setMode('hiragana');
+        document.getElementById('btn-kata').onclick = () => this.setMode('katakana');
 
-    let delay = 0;
-    const duration = 600; 
+        // Botón Start
+        document.getElementById('btn-start').onclick = () => this.start();
 
-    paths.forEach((path) => {
-        setTimeout(() => {
-            path.style.transition = `stroke-dashoffset ${duration}ms ease-out`;
-            path.style.strokeDashoffset = '0';
-        }, delay);
-        delay += 100;
-    });
-}
+        // Listeners para auto-guardado en configuración
+        document.getElementById('setup-screen').addEventListener('change', () => this.saveUserPreferences());
+    },
 
-// --- CANVAS INPUT ---
-function initCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    setMode(mode) {
+        this.state.mode = mode;
+        document.getElementById('btn-hira').classList.toggle('active', mode === 'hiragana');
+        document.getElementById('btn-kata').classList.toggle('active', mode === 'katakana');
+        this.saveUserPreferences();
+    },
 
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#333';
-    
-    canvas.onmousedown = startDraw;
-    canvas.onmouseup = endDraw;
-    canvas.onmousemove = draw;
-    canvas.ontouchstart = (e) => { e.preventDefault(); startDraw(e.touches[0]); };
-    canvas.ontouchend = endDraw;
-    canvas.ontouchmove = (e) => { e.preventDefault(); draw(e.touches[0]); };
-}
-function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.clientX || e.touches[0].clientX;
-    const clientY = e.clientY || e.touches[0].clientY;
-    return { 
-        x: (clientX - rect.left), 
-        y: (clientY - rect.top) 
-    };
-}
-function startDraw(e) { if(!isCanvasMode) return; isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); }
-function draw(e) { if (!isDrawing || !isCanvasMode) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
-function endDraw() { isDrawing = false; }
-function clearCanvas() { 
-    if(!isCanvasMode) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
-    if(currentChallenge.length > 1) drawCanvasGuides(currentChallenge.length);
-}
-
-// --- PRINT LOGIC ---
-function generatePrintSheet() {
-    if (availablePool.length === 0 && (!currentChallenge || currentChallenge.length === 0)) {
+    // --- CORE GAME LOOP ---
+    start() {
+        // 1. Validar selección
         const checkboxes = document.querySelectorAll('.checkbox-grid input:checked');
         const selectedGroups = Array.from(checkboxes).map(cb => cb.value);
-        availablePool = kanaDB.filter(item => selectedGroups.includes(item.g));
-    }
-    if (availablePool.length === 0) return alert("Selecciona al menos una fila");
-    
-    const container = document.getElementById('print-content');
-    container.innerHTML = ''; 
-    document.querySelector('.print-title').innerText = `Práctica de ${currentMode === 'hiragana' ? 'Hiragana' : 'Katakana'}`;
-    
-    const itemsToPrint = [...availablePool].sort((a,b) => a.r.localeCompare(b.r));
+        this.state.pool = kanaDB.filter(item => selectedGroups.includes(item.g));
 
-    itemsToPrint.forEach(item => {
-        const char = currentMode === 'hiragana' ? item.h : item.k;
-        const row = document.createElement('div');
-        row.className = 'print-row';
-        const label = document.createElement('div');
-        label.className = 'print-label';
-        label.innerText = item.r;
-        row.appendChild(label);
-        const grid = document.createElement('div');
-        grid.className = 'print-grid';
-        for(let i=0; i<8; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'print-cell';
-            if (i <= 3) {
-                const span = document.createElement('span');
-                span.className = 'print-kana';
-                span.innerText = char;
-                if (i === 0) span.classList.add('master');
-                cell.appendChild(span);
-            }
-            grid.appendChild(cell);
+        if (this.state.pool.length === 0) return alert("Selecciona al menos una fila");
+
+        // 2. Configurar Entorno
+        this.settings.timeMode = document.getElementById('time-mode-toggle').checked;
+        this.settings.canvasMode = document.getElementById('canvas-mode-toggle').checked;
+        
+        // Reset State
+        this.state.score = 0;
+        this.state.phase = 1;
+        
+        // Update UI
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('practice-screen').style.display = 'flex';
+        
+        // Configurar Pizarra
+        this.setupWorkspace();
+        
+        this.nextTurn();
+    },
+
+    setupWorkspace() {
+        CanvasManager.toggle(this.settings.canvasMode);
+        
+        const canvasToolbar = document.getElementById('canvas-toolbar');
+        const scoreOnly = document.getElementById('score-only');
+        const instr = document.getElementById('instruction-text');
+
+        if (this.settings.canvasMode) {
+            canvasToolbar.style.display = 'flex';
+            scoreOnly.style.display = 'none';
+            instr.innerText = "Escribe en las zonas asignadas";
+        } else {
+            canvasToolbar.style.display = 'none';
+            scoreOnly.style.display = 'flex';
+            instr.innerText = "Escribe en tu papel";
         }
-        row.appendChild(grid);
-        container.appendChild(row);
-    });
-    window.print();
-}
+    },
+
+    updateUI() {
+        // Calcular fase
+        this.state.phase = Math.min(5, Math.floor(this.state.score / 5) + 1);
+        
+        // Textos
+        let phaseText = `Nivel ${this.state.phase}`;
+        if(this.state.phase >= 3) phaseText += " (Combos)";
+        if(this.state.phase >= 5) phaseText += " (Experto)";
+        
+        document.getElementById('phase-badge').innerText = phaseText;
+        
+        const scoreText = `Score: ${this.state.score}`;
+        document.getElementById('counter').innerText = scoreText;
+        document.getElementById('counter-alt').innerText = scoreText;
+    },
+
+    generateChallenge() {
+        this.updateUI();
+
+        // Determinar dificultad
+        let quantity = 1;
+        if (this.settings.timeMode) {
+            if (this.state.phase >= 3) quantity = 2;
+            if (this.state.phase >= 5) quantity = 3;
+        }
+
+        // Timer calculation
+        let timePerKana = 15 - (this.state.phase * 1.5);
+        if (timePerKana < 4) timePerKana = 4;
+        this.timer.max = Math.ceil(timePerKana * quantity);
+
+        // Selección de Kanas (Algoritmo anti-repetición simple)
+        const sequence = [];
+        for (let i = 0; i < quantity; i++) {
+            let candidate;
+            let safety = 0;
+            do {
+                candidate = this.state.pool[Math.floor(Math.random() * this.state.pool.length)];
+                safety++;
+                // Evitar repetir el inmediatamente anterior
+                if (i > 0 && candidate === sequence[i-1] && this.state.pool.length > 5) candidate = null;
+            } while (!candidate && safety < 10);
+            
+            if (candidate) sequence.push(candidate);
+        }
+        return sequence;
+    },
+
+    nextTurn() {
+        this.state.currentChallenge = this.generateChallenge();
+        this.state.isRevealed = false;
+
+        // UI Reset
+        const romajiStr = this.state.currentChallenge.map(c => c.r.toUpperCase()).join(' • ');
+        document.getElementById('romaji-display').innerText = romajiStr;
+
+        const svgCont = document.getElementById('svg-container');
+        svgCont.innerHTML = '';
+        svgCont.classList.remove('visible');
+        document.getElementById('workspace').classList.remove('failed');
+
+        // Botones
+        const btn = document.getElementById('action-btn');
+        btn.innerText = "Ver Respuesta";
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-main');
+        document.getElementById('replay-btn').style.display = 'none';
+
+        // Canvas
+        if (this.settings.canvasMode) {
+            CanvasManager.clear();
+            CanvasManager.drawGuides(this.state.currentChallenge.length);
+        }
+
+        this.startTimer();
+    },
+
+    // --- TIMER SYSTEM ---
+    startTimer() {
+        if (!this.settings.timeMode) {
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('timer-badge').style.display = 'none';
+            return;
+        }
+
+        this.stopTimer();
+        this.timer.current = this.timer.max;
+        
+        const uiBar = document.getElementById('timer-bar');
+        const uiBadge = document.getElementById('timer-badge');
+        
+        document.getElementById('timer-container').style.display = 'block';
+        uiBadge.style.display = 'block';
+        uiBar.style.width = '100%';
+        uiBar.style.background = 'var(--secondary)';
+        uiBadge.innerText = Math.ceil(this.timer.current) + 's';
+
+        this.timer.interval = setInterval(() => {
+            this.timer.current -= 0.1;
+            const pct = (this.timer.current / this.timer.max) * 100;
+            
+            uiBar.style.width = `${pct}%`;
+            if (pct < 30) uiBar.style.background = 'var(--danger)';
+            
+            // Actualizar texto badge cada segundo (no cada 100ms)
+            if (Math.abs(Math.round(this.timer.current) - this.timer.current) < 0.15) {
+                uiBadge.innerText = Math.ceil(this.timer.current) + 's';
+            }
+
+            if (this.timer.current <= 0) this.timeUp();
+        }, 100);
+    },
+
+    stopTimer() {
+        if (this.timer.interval) clearInterval(this.timer.interval);
+    },
+
+    timeUp() {
+        this.stopTimer();
+        document.getElementById('timer-bar').style.width = '0%';
+        this.revealAnswer(true);
+    },
+
+    // --- ACTIONS ---
+    handleAction() {
+        if (!this.state.isRevealed) this.revealAnswer(false);
+        else {
+            this.state.score++;
+            this.updateHighScoreUI();
+            this.nextTurn();
+        }
+    },
+
+    async revealAnswer(failed = false) {
+        this.stopTimer();
+        this.state.isRevealed = true;
+
+        const btn = document.getElementById('action-btn');
+        btn.innerText = failed ? "Tiempo Agotado (Continuar)" : "Correcto (Siguiente)";
+        
+        if (failed) {
+            this.state.score = Math.max(0, this.state.score - 1);
+            document.getElementById('workspace').classList.add('failed');
+            this.updateUI();
+        } else {
+             // Check High Score
+             if (Storage.setHighScore(this.state.score)) {
+                 this.state.highScore = this.state.score;
+                 this.updateHighScoreUI();
+             }
+        }
+
+        document.getElementById('replay-btn').style.display = 'block';
+        const container = document.getElementById('svg-container');
+        container.classList.add('visible');
+
+        // Carga paralela de SVGs
+        const promises = this.state.currentChallenge.map(item => {
+            const char = this.state.mode === 'hiragana' ? item.h : item.k;
+            const hex = char.codePointAt(0).toString(16).padStart(5, '0');
+            const url = `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg/kanji/${hex}.svg`;
+            return fetch(url).then(r => r.ok ? r.text() : null).catch(()=>null);
+        });
+
+        const results = await Promise.all(promises);
+        
+        container.innerHTML = '';
+        results.forEach((svg, idx) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'svg-char';
+            if (svg) {
+                wrapper.innerHTML = svg;
+                const el = wrapper.querySelector('svg');
+                el.removeAttribute('width'); 
+                el.removeAttribute('height');
+            } else {
+                // Fallback texto
+                const item = this.state.currentChallenge[idx];
+                const char = this.state.mode === 'hiragana' ? item.h : item.k;
+                wrapper.innerHTML = `<div style="font-size:3rem;font-family:'Klee One'">${char}</div>`;
+            }
+            container.appendChild(wrapper);
+        });
+
+        this.animateStrokeOrder();
+    },
+
+    animateStrokeOrder() {
+        const paths = document.querySelectorAll('#svg-container path');
+        paths.forEach(p => {
+            p.style.transition = 'none';
+            p.style.strokeDasharray = '1000';
+            p.style.strokeDashoffset = '1000';
+        });
+
+        // Force reflow
+        void document.getElementById('svg-container').offsetWidth;
+
+        let delay = 0;
+        paths.forEach(p => {
+            setTimeout(() => {
+                p.style.transition = 'stroke-dashoffset 600ms ease-out';
+                p.style.strokeDashoffset = '0';
+            }, delay);
+            delay += 150;
+        });
+    },
+
+    replayAnimation() {
+        this.animateStrokeOrder();
+    },
+
+    updateHighScoreUI() {
+        const text = `🏆 Best: ${this.state.highScore}`;
+        document.getElementById('high-score-display').innerText = text;
+        document.getElementById('high-score-display-alt').innerText = text;
+    },
+
+    exit() {
+        this.stopTimer();
+        document.getElementById('practice-screen').style.display = 'none';
+        document.getElementById('setup-screen').style.display = 'block';
+    }
+};
+
+// Iniciar aplicación
+window.onload = () => Game.init();
