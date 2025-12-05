@@ -25,7 +25,6 @@
 
         <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">1. Selecciona Filas</h3>
         
-        <!-- Checkboxes con IDs para guardado automático -->
         <div class="checkbox-grid" id="rows-container">
             <label class="checkbox-item"><input type="checkbox" value="row-a" checked> Vocales</label>
             <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K</label>
@@ -42,6 +41,18 @@
 
         <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">2. Configuración</h3>
         
+        <!-- NUEVO: Toggle de Modo Trazado -->
+        <div class="challenge-box blue" style="border-style: solid;">
+            <div>
+                <strong>🎓 Modo Aprendizaje (Trazar)</strong><br>
+                <small style="color:#666">Muestra la guía para repasar encima</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="trace-mode-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <!-- Contrareloj -->
         <div class="challenge-box">
             <div>
@@ -54,40 +65,36 @@
             </label>
         </div>
 
-        <!-- Toggle de Audio -->
+        <!-- Toggle de Pizarra -->
         <div class="challenge-box">
             <div>
-                <strong>🔊 Audio de Pronunciación</strong><br>
-                <small style="color:#666">Escuchar al revelar respuesta</small>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="audio-mode-toggle" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <!-- Toggle de Pizarra -->
-        <div class="challenge-box blue">
-            <div>
                 <strong>✏️ Usar Pizarra Digital</strong><br>
-                <small style="color:#666">Dibujar en pantalla (Desactívalo si usas papel)</small>
+                <small style="color:#666">Dibujar en pantalla</small>
             </div>
             <label class="switch">
                 <input type="checkbox" id="canvas-mode-toggle" checked>
                 <span class="slider"></span>
             </label>
         </div>
+        
+        <!-- Audio (Oculto en acordeón o simple) -->
+         <div class="challenge-box" style="padding: 10px; min-height: auto;">
+            <div style="font-size: 0.9rem;">🔊 Audio Activado</div>
+            <label class="switch" style="transform: scale(0.8);">
+                <input type="checkbox" id="audio-mode-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
 
         <div style="text-align: center; margin-top: 2rem;">
-            <button class="btn-main" id="btn-start">✏️ Empezar Práctica</button>
-            <button class="btn-outline" onclick="generatePrintSheet()">🖨️ Generar PDF</button>
+            <button class="btn-main" id="btn-start">🚀 Empezar</button>
+            <button class="btn-outline" onclick="generatePrintSheet()">🖨️ PDF</button>
         </div>
     </div>
 
     <!-- PRACTICE SCREEN -->
     <div id="practice-screen">
         
-        <!-- Timer UI -->
         <div class="timer-container" id="timer-container">
             <div class="timer-bar" id="timer-bar"></div>
         </div>
@@ -95,7 +102,6 @@
         <div style="position:relative; width: 100%; text-align: center;">
             <div id="phase-badge" class="phase-badge">Nivel 1</div>
             
-             <!-- Contenedor Romaji + Botón Audio -->
             <div style="display:flex; justify-content:center; align-items:center;">
                 <div class="romaji-display" id="romaji-display">KA</div>
                 <button id="manual-audio-btn" class="audio-btn" style="display:none;" onclick="Game.playCurrentAudio()">🔊</button>
@@ -109,14 +115,12 @@
         <div class="toolbar" id="canvas-toolbar">
             <button class="tool-btn" onclick="CanvasManager.clear()">Borrar 🗑️</button>
             <span style="flex:1"></span>
-            <!-- Info Stats -->
             <div style="display:flex; gap:15px; align-items:center; font-size:0.9rem; color:#666;">
                 <span id="high-score-display">🏆 Best: 0</span>
                 <span id="counter" style="color:var(--dark); font-weight:bold;">Score: 0</span>
             </div>
         </div>
         
-        <!-- Score alternativo cuando no hay canvas -->
         <div id="score-only" style="display:none; justify-content:center; gap:15px; color:#888; font-size:0.9rem; margin-bottom:10px;">
             <span id="high-score-display-alt">🏆 Best: 0</span>
             <span id="counter-alt" style="color:var(--dark); font-weight:bold;">Score: 0</span>
@@ -124,19 +128,18 @@
 
         <div class="workspace" id="workspace">
             <canvas id="writeCanvas" width="360" height="180"></canvas>
-            <!-- Contenedor para múltiples SVGs -->
             <div id="svg-container"></div>
         </div>
 
-        <!-- ACCIONES (MODIFICADO) -->
+        <!-- ACCIONES -->
         
-        <!-- 1. Estado inicial: Ver respuesta -->
+        <!-- Estado 1: Normal -->
         <div class="action-bar" id="default-actions">
             <button class="btn-outline" onclick="Game.exit()">Salir</button>
             <button class="btn-main" id="action-btn" onclick="Game.handleAction()" style="flex:2">Ver Respuesta</button>
         </div>
 
-        <!-- 2. Estado evaluación: Bien/Mal -->
+        <!-- Estado 2: Evaluación -->
         <div class="action-bar" id="evaluation-actions" style="display:none;">
             <button class="btn-outline" style="border-color:var(--danger); color:var(--danger);" onclick="Game.markResult(false)">❌ Mal</button>
             <button class="btn-outline" onclick="Game.replayAnimation()">↺</button>
@@ -144,13 +147,11 @@
         </div>
     </div>
 
-    <!-- PRINT CONTAINER -->
     <div id="print-container">
         <h2 class="print-title">Hoja de Práctica</h2>
         <div id="print-content"></div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
 </body>
