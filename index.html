@@ -3,147 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dojo de Kana - Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <title>Dojo de Kana - Ninja Way</title>
+    <!-- Fuentes de acción y japonesas -->
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&family=Oswald:wght@500;700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-    <header>
-        <h1>Dojo de Escritura</h1>
-        <p style="margin:5px; color:#666;">Selecciona • Escribe • Anima</p>
+    <header class="ninja-header">
+        <div class="header-inner">
+            <div class="brand">
+                <span class="symbol">巻</span>
+                <h1>DOJO DE KANA <span class="jp">| かな道場</span></h1>
+            </div>
+            <div class="decoration-line"></div>
+        </div>
     </header>
 
-    <!-- SETUP SCREEN -->
-    <div id="setup-screen">
-        <div class="toggle-group">
-            <button class="toggle-btn active" id="btn-hira" onclick="Game.setMode('hiragana')">Hiragana (あ)</button>
-            <button class="toggle-btn" id="btn-kata" onclick="Game.setMode('katakana')">Katakana (ア)</button>
-        </div>
-
-        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">1. Selecciona Filas</h3>
+    <main class="main-content">
         
-        <div class="checkbox-grid" id="rows-container">
-            <label class="checkbox-item"><input type="checkbox" value="row-a" checked> Vocales</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-s"> S</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-t"> T</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-n"> N</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-h"> H</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-m"> M</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-y"> Y</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-r"> R</label>
-            <label class="checkbox-item"><input type="checkbox" value="row-w"> W/N</label>
-            <label class="checkbox-item"><input type="checkbox" value="dakuten"> Sonoros</label>
-        </div>
-
-        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">2. Configuración</h3>
-        
-        <!-- Toggle Modo Trazado (Aprendizaje) -->
-        <div class="challenge-box blue">
-            <div>
-                <strong>🎓 Modo Aprendizaje (Trazar)</strong><br>
-                <small style="color:#666">Muestra la guía para repasar encima</small>
+        <!-- SETUP SCREEN -->
+        <div id="setup-screen" class="ninja-panel">
+            <div class="panel-title">
+                <h2>CONFIGURACIÓN DE MISIÓN</h2>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="trace-mode-toggle">
-                <span class="slider"></span>
-            </label>
-        </div>
 
-        <!-- Toggle Contrareloj -->
-        <div class="challenge-box">
-            <div>
-                <strong>⏱️ Modo Contrareloj</strong><br>
-                <small style="color:#666">Retos progresivos</small>
+            <div class="toggle-group-sharp">
+                <button class="toggle-btn active" id="btn-hira" onclick="Game.setMode('hiragana')">HIRAGANA</button>
+                <button class="toggle-btn" id="btn-kata" onclick="Game.setMode('katakana')">KATAKANA</button>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="time-mode-toggle">
-                <span class="slider"></span>
-            </label>
-        </div>
 
-        <!-- Toggle Pizarra -->
-        <div class="challenge-box">
-            <div>
-                <strong>✏️ Usar Pizarra Digital</strong><br>
-                <small style="color:#666">Dibujar en pantalla</small>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="canvas-mode-toggle" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <!-- Toggle Audio -->
-        <div class="challenge-box">
-            <div>
-                <strong>🔊 Audio de Pronunciación</strong><br>
-                <small style="color:#666">Escuchar al revelar respuesta</small>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="audio-mode-toggle" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div style="text-align: center; margin-top: 2rem;">
-            <button class="btn-main" id="btn-start">Empezar Práctica</button>
-            <button class="btn-outline" onclick="generatePrintSheet()">🖨️ Generar PDF</button>
-        </div>
-    </div>
-
-    <!-- PRACTICE SCREEN -->
-    <div id="practice-screen">
-        
-        <div class="timer-container" id="timer-container">
-            <div class="timer-bar" id="timer-bar"></div>
-        </div>
-
-        <div style="position:relative; width: 100%; text-align: center;">
-            <div id="phase-badge" class="phase-badge">Nivel 1</div>
+            <div class="section-divider"><span>01</span> SELECCIÓN DE OBJETIVOS</div>
             
-            <div style="display:flex; justify-content:center; align-items:center;">
-                <div class="romaji-display" id="romaji-display">KA</div>
-                <button id="manual-audio-btn" class="audio-btn" style="display:none;" onclick="Game.playCurrentAudio()">🔊</button>
+            <div class="checkbox-grid" id="rows-container">
+                <label class="checkbox-item"><input type="checkbox" value="row-a" checked> VOCALES</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-s"> S-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-t"> T-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-n"> N-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-h"> H-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-m"> M-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-y"> Y-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-r"> R-ROW</label>
+                <label class="checkbox-item"><input type="checkbox" value="row-w"> W/N</label>
+                <label class="checkbox-item"><input type="checkbox" value="dakuten"> DAKUTEN</label>
+            </div>
+
+            <div class="section-divider"><span>02</span> PARÁMETROS DE MISIÓN</div>
+            
+            <div class="options-list">
+                <!-- Trace Mode -->
+                <div class="option-row">
+                    <div class="opt-label">MODO ENTRENAMIENTO <span class="sub">Guía de Trazado</span></div>
+                    <label class="ninja-switch">
+                        <input type="checkbox" id="trace-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Time Mode -->
+                <div class="option-row">
+                    <div class="opt-label">MODO CONTRARELOJ <span class="sub">Límite de Tiempo</span></div>
+                    <label class="ninja-switch">
+                        <input type="checkbox" id="time-mode-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Canvas Mode -->
+                <div class="option-row">
+                    <div class="opt-label">PIZARRA DIGITAL <span class="sub">Escritura en Pantalla</span></div>
+                    <label class="ninja-switch">
+                        <input type="checkbox" id="canvas-mode-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Audio Mode -->
+                <div class="option-row">
+                    <div class="opt-label">SISTEMA DE AUDIO <span class="sub">Pronunciación</span></div>
+                    <label class="ninja-switch">
+                        <input type="checkbox" id="audio-mode-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="action-footer">
+                <button class="btn-ninja primary large" id="btn-start">INICIAR MISIÓN</button>
+                <button class="btn-ninja secondary" onclick="generatePrintSheet()">IMPRIMIR REPORTE</button>
+            </div>
+        </div>
+
+        <!-- PRACTICE SCREEN -->
+        <div id="practice-screen" class="ninja-panel" style="display:none;">
+            
+            <div class="timer-wrapper" id="timer-container">
+                <div class="timer-bar" id="timer-bar"></div>
+            </div>
+
+            <div class="battle-header">
+                <div id="phase-badge" class="rank-badge">RANGO: GENIN</div>
+                <div id="timer-badge" class="time-badge">15s</div>
+            </div>
+
+            <div class="romaji-box">
+                <div class="romaji-text" id="romaji-display">KA</div>
+                <button id="manual-audio-btn" class="audio-trigger" style="display:none;" onclick="Game.playCurrentAudio()">🔊</button>
+            </div>
+
+            <div class="instruction-line" id="instruction-text">ESCRIBE EL CARÁCTER</div>
+
+            <div class="tools-bar" id="canvas-toolbar">
+                <button class="btn-text-sharp" onclick="CanvasManager.clear()">LIMPIAR</button>
+                <div class="score-box">
+                    <span id="counter" class="current-score">SCORE: 0</span>
+                    <span id="high-score-display" class="best-score">BEST: 0</span>
+                </div>
             </div>
             
-            <div id="timer-badge" class="stats-badge">15s</div>
-        </div>
+            <div id="score-only" class="score-box center" style="display:none;">
+                <span id="counter-alt">SCORE: 0</span>
+            </div>
 
-        <p id="instruction-text" style="color:#888; margin-top:-5px; font-size: 0.9rem;">Escribe en las zonas asignadas</p>
+            <div class="scroll-workspace" id="workspace">
+                <canvas id="writeCanvas" width="360" height="180"></canvas>
+                <div id="svg-container"></div>
+                <!-- Elementos decorativos estilo esquina -->
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+            </div>
 
-        <div class="toolbar" id="canvas-toolbar">
-            <button class="tool-btn" onclick="CanvasManager.clear()">Borrar 🗑️</button>
-            <span style="flex:1"></span>
-            <div style="display:flex; gap:15px; align-items:center; font-size:0.9rem; color:#666;">
-                <span id="high-score-display">🏆 Best: 0</span>
-                <span id="counter" style="color:var(--dark); font-weight:bold;">Score: 0</span>
+            <!-- ACTION BUTTONS -->
+            <div class="action-bar" id="default-actions">
+                <button class="btn-ninja secondary" onclick="Game.exit()">RETIRADA</button>
+                <button class="btn-ninja primary flex" id="action-btn" onclick="Game.handleAction()">REVELAR JUTSU</button>
+            </div>
+
+            <div class="action-bar" id="evaluation-actions" style="display:none;">
+                <button class="btn-ninja danger outline" onclick="Game.markResult(false)">FALLO</button>
+                <button class="btn-ninja secondary outline icon" onclick="Game.replayAnimation()">↺</button>
+                <button class="btn-ninja success flex" onclick="Game.markResult(true)">ÉXITO</button>
             </div>
         </div>
-        
-        <div id="score-only" style="display:none; justify-content:center; gap:15px; color:#888; font-size:0.9rem; margin-bottom:10px;">
-            <span id="high-score-display-alt">🏆 Best: 0</span>
-            <span id="counter-alt" style="color:var(--dark); font-weight:bold;">Score: 0</span>
-        </div>
 
-        <div class="workspace" id="workspace">
-            <canvas id="writeCanvas" width="360" height="180"></canvas>
-            <div id="svg-container"></div>
-        </div>
-
-        <!-- ACCIONES -->
-        <div class="action-bar" id="default-actions">
-            <button class="btn-outline" onclick="Game.exit()">Salir</button>
-            <button class="btn-main" id="action-btn" onclick="Game.handleAction()" style="flex:2">Ver Respuesta</button>
-        </div>
-
-        <div class="action-bar" id="evaluation-actions" style="display:none;">
-            <button class="btn-outline" style="border-color:var(--danger); color:var(--danger);" onclick="Game.markResult(false)">❌ Mal</button>
-            <button class="btn-outline" onclick="Game.replayAnimation()">↺</button>
-            <button class="btn-main" style="background:var(--secondary); border-color:var(--secondary);" onclick="Game.markResult(true)">✅ Bien</button>
-        </div>
-    </div>
+    </main>
 
     <!-- PRINT CONTAINER -->
     <div id="print-container">
