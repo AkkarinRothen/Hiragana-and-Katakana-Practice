@@ -3,119 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kana Rush - Arcade Mode</title>
-    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Dojo de Kana - Completo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
-    <style>
-        /* Estilos específicos para el modo Arcade */
-        .game-hud {
-            display: flex; justify-content: space-between; align-items: center;
-            background: white; padding: 15px 20px; border-radius: 20px;
-            margin-bottom: 20px; box-shadow: var(--shadow-card);
-        }
-        .hud-item { text-align: center; }
-        .hud-label { font-size: 0.8rem; color: var(--text-light); display: block; }
-        .hud-value { font-size: 1.5rem; font-weight: 900; color: var(--maru-pink); }
-        .hud-value.combo { color: var(--maru-blue); }
-        
-        .hearts { font-size: 1.5rem; color: var(--danger); letter-spacing: 5px; }
-        
-        .enemy-display {
-            background: var(--maru-pink); color: white;
-            width: 100px; height: 100px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3rem; font-weight: 900; margin: 0 auto 20px;
-            box-shadow: 0 5px 15px rgba(230, 0, 126, 0.4);
-            border: 5px solid white;
-            animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        /* Barra de tiempo de peligro */
-        .rush-timer { height: 10px; border-radius: 5px; background: #eee; overflow: hidden; margin-bottom: 20px; }
-        .rush-fill { height: 100%; background: var(--maru-blue); width: 100%; transition: width 0.1s linear; }
-        .rush-fill.danger { background: var(--danger); }
-
-        /* Pantalla Game Over */
-        #game-over-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 100;
-            display: none; align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background: white; padding: 40px; border-radius: 25px; text-align: center;
-            max-width: 400px; width: 90%; animation: popIn 0.3s;
-        }
-        @keyframes popIn { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
-        .final-score { font-size: 3rem; color: var(--maru-pink); font-weight: 900; margin: 10px 0; }
-    </style>
 </head>
 <body>
 
     <header class="marugoto-header">
         <div class="header-content">
-            <div class="logo-box">GAME</div>
-            <h1>Kana Rush <span class="jp-title">| かなラッシュ</span></h1>
+            <div class="logo-box">APP</div>
+            <h1>Dojo de Escritura <span class="jp-title">| かな道場</span></h1>
         </div>
     </header>
 
     <div class="main-container">
         
-        <!-- MENU DE INICIO -->
-        <div id="start-screen" class="card-panel" style="text-align: center;">
-            <h2 style="color:var(--maru-pink); font-size: 2rem;">¿Listo para el reto?</h2>
-            <p style="color:var(--text-light); margin-bottom: 30px;">Escribe rápido y sin errores. La dificultad aumenta progresivamente.</p>
-            
-            <div class="toggle-group-pill" style="margin-bottom: 30px;">
-                <button class="toggle-btn active" id="btn-hira" onclick="KanaRush.setMode('hiragana')">Hiragana</button>
-                <button class="toggle-btn" id="btn-kata" onclick="KanaRush.setMode('katakana')">Katakana</button>
+        <!-- MENU PRINCIPAL -->
+        <div id="setup-screen" class="card-panel">
+            <div class="panel-header">
+                <h2>Elige tu Camino</h2>
             </div>
 
-            <button class="btn-maru primary big" onclick="KanaRush.start()">COMENZAR JUEGO</button>
-            <br><br>
-            <a href="index.html" class="btn-text">Volver a Práctica</a>
+            <!-- Selector de Silabario Global -->
+            <div class="toggle-group-pill">
+                <button class="toggle-btn active" id="btn-hira" onclick="Game.setMode('hiragana'); KanaRush.setMode('hiragana');">Hiragana (あ)</button>
+                <button class="toggle-btn" id="btn-kata" onclick="Game.setMode('katakana'); KanaRush.setMode('katakana');">Katakana (ア)</button>
+            </div>
+
+            <!-- Selector de Modo de Juego -->
+            <div style="display: flex; gap: 10px; margin-bottom: 2rem;">
+                <div class="mode-card active" id="card-practice" onclick="selectAppMode('practice')">
+                    <h4>📖 Práctica Zen</h4>
+                    <p>Sin estrés. Elige filas y repasa.</p>
+                </div>
+                <div class="mode-card" id="card-arcade" onclick="selectAppMode('arcade')">
+                    <h4>🔥 Kana Rush</h4>
+                    <p>Arcade contrareloj. Sube de nivel.</p>
+                </div>
+            </div>
+
+            <!-- OPCIONES: SOLO VISIBLES EN MODO PRÁCTICA -->
+            <div id="practice-options">
+                <h3 class="section-label"><span class="icon">1</span> Filas a Estudiar</h3>
+                <div class="checkbox-grid" id="rows-container">
+                    <label class="checkbox-item"><input type="checkbox" value="row-a" checked> Vocales</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-s"> S</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-t"> T</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-n"> N</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-h"> H</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-m"> M</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-y"> Y</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-r"> R</label>
+                    <label class="checkbox-item"><input type="checkbox" value="row-w"> W/N</label>
+                    <label class="checkbox-item"><input type="checkbox" value="dakuten"> Sonoros</label>
+                </div>
+
+                <h3 class="section-label"><span class="icon">2</span> Extras</h3>
+                <div class="options-container">
+                    <div class="option-row">
+                        <div class="opt-info"><strong>Modo Trazado</strong><small>Guía para repasar</small></div>
+                        <label class="switch maru"><input type="checkbox" id="trace-mode-toggle"><span class="slider round"></span></label>
+                    </div>
+                    <div class="option-row">
+                        <div class="opt-info"><strong>Pizarra Digital</strong><small>Dibujar en pantalla</small></div>
+                        <label class="switch maru"><input type="checkbox" id="canvas-mode-toggle" checked><span class="slider round"></span></label>
+                    </div>
+                    <div class="option-row">
+                        <div class="opt-info"><strong>Audio</strong><small>Escuchar pronunciación</small></div>
+                        <label class="switch maru"><input type="checkbox" id="audio-mode-toggle" checked><span class="slider round"></span></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÓN DE INICIO INTELIGENTE -->
+            <div class="footer-actions">
+                <button class="btn-maru primary big" id="btn-main-action" onclick="launchApp()">EMPEZAR PRÁCTICA</button>
+            </div>
+            <div style="text-align:center; margin-top:10px;" id="print-option">
+                <button class="btn-text" onclick="generatePrintSheet()">o generar hoja PDF</button>
+            </div>
         </div>
 
-        <!-- PANTALLA DE JUEGO -->
-        <div id="game-screen" style="display:none;">
-            
-            <!-- HUD -->
-            <div class="game-hud">
-                <div class="hud-item">
-                    <span class="hud-label">Puntaje</span>
-                    <span class="hud-value" id="score-val">0</span>
-                </div>
-                <div class="hud-item">
-                    <div class="hearts" id="lives-display">❤️❤️❤️</div>
-                </div>
-                <div class="hud-item">
-                    <span class="hud-label">Combo</span>
-                    <span class="hud-value combo" id="combo-val">x1.0</span>
+        <!-- PANTALLA 1: PRÁCTICA ZEN -->
+        <div id="practice-screen" class="card-panel" style="display:none;">
+            <!-- (Contenido original de práctica) -->
+            <div style="position:relative; width: 100%; text-align: center;">
+                <div id="phase-badge" class="badge-pill">Práctica</div>
+                <div class="romaji-container">
+                    <div class="romaji-display" id="romaji-display">KA</div>
+                    <button id="manual-audio-btn" class="audio-icon-btn" style="display:none;" onclick="Game.playCurrentAudio()"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
                 </div>
             </div>
 
-            <!-- ENEMIGO -->
-            <div class="rush-timer"><div class="rush-fill" id="timer-bar"></div></div>
-            <div class="enemy-display" id="enemy-romaji">KA</div>
+            <p id="instruction-text">Escribe en las zonas asignadas</p>
 
-            <!-- AREA DE DIBUJO -->
-            <div class="workspace">
+            <div class="toolbar" id="canvas-toolbar">
+                <button class="btn-text" onclick="CanvasManager.clear()">Borrar todo</button>
+                <span class="spacer"></span>
+                <div class="score-display">
+                    <span id="high-score-display" class="best">Best: 0</span>
+                    <span id="counter" class="current">Score: 0</span>
+                </div>
+            </div>
+            
+            <div id="score-only" class="score-display-center" style="display:none;">
+                <span id="high-score-display-alt" class="best">Best: 0</span>
+                <span id="counter-alt" class="current">Score: 0</span>
+            </div>
+
+            <div class="workspace" id="workspace">
                 <canvas id="writeCanvas" width="360" height="180"></canvas>
                 <div id="svg-container"></div>
             </div>
 
+            <div class="action-bar" id="default-actions">
+                <button class="btn-maru secondary" onclick="Game.exit()">Salir</button>
+                <button class="btn-maru primary flex-grow" id="action-btn" onclick="Game.handleAction()">Ver Respuesta</button>
+            </div>
+
+            <div class="action-bar" id="evaluation-actions" style="display:none;">
+                <button class="btn-maru danger outline" onclick="Game.markResult(false)">Mal</button>
+                <button class="btn-maru secondary outline icon-only" onclick="Game.replayAnimation()">↺</button>
+                <button class="btn-maru success flex-grow" onclick="Game.markResult(true)">Bien</button>
+            </div>
+        </div>
+
+        <!-- PANTALLA 2: KANA RUSH (ARCADE) -->
+        <div id="arcade-screen" class="card-panel" style="display:none; border-color: var(--maru-pink);">
+            <!-- HUD -->
+            <div class="game-hud">
+                <div class="hud-item">
+                    <span class="hud-label">Puntaje</span>
+                    <span class="hud-value" id="arcade-score">0</span>
+                </div>
+                <div class="hud-item">
+                    <div class="hearts" id="arcade-lives">❤️❤️❤️</div>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Combo</span>
+                    <span class="hud-value combo" id="arcade-combo">x1.0</span>
+                </div>
+            </div>
+
+            <!-- ENEMIGO -->
+            <div class="rush-timer"><div class="rush-fill" id="arcade-timer"></div></div>
+            <div class="enemy-display" id="arcade-enemy">KA</div>
+
+            <!-- AREA DE DIBUJO (Canvas separado para evitar conflictos de ID) -->
+            <div class="workspace">
+                <canvas id="arcadeCanvas" width="360" height="180"></canvas>
+                <div id="arcade-svg-container" style="width:100%;height:100%;position:absolute;top:0;left:0;display:flex;justify-content:center;align-items:center;pointer-events:none;"></div>
+            </div>
+
             <!-- CONTROLES -->
-            <div class="action-bar" id="action-area">
+            <div class="action-bar" id="arcade-action-area">
                 <button class="btn-maru primary big flex-grow" onclick="KanaRush.checkAnswer()">¡LISTO!</button>
             </div>
 
-            <!-- EVALUACION (Oculto inicialmente) -->
-            <div class="action-bar" id="eval-area" style="display:none;">
+            <div class="action-bar" id="arcade-eval-area" style="display:none;">
                 <button class="btn-maru danger outline" onclick="KanaRush.resolveRound(false)">❌ Fallé</button>
                 <button class="btn-maru success flex-grow" onclick="KanaRush.resolveRound(true)">✅ ¡Acerté!</button>
             </div>
         </div>
+
     </div>
 
     <!-- GAME OVER MODAL -->
@@ -124,15 +175,70 @@
             <h2 style="margin:0; color:var(--text-light);">Juego Terminado</h2>
             <div class="final-score" id="final-score">0</div>
             <p>Mejor Combo: <span id="final-combo" style="font-weight:bold; color:var(--maru-blue)">x1.0</span></p>
-            <button class="btn-maru primary big" onclick="location.reload()">Jugar de Nuevo</button>
+            <button class="btn-maru primary big" onclick="closeModalAndRestart()">Jugar de Nuevo</button>
             <br><br>
-            <a href="index.html" class="btn-text">Volver al Menú</a>
+            <button class="btn-text" onclick="closeModalAndExit()">Volver al Menú</button>
         </div>
     </div>
 
-    <!-- Reutilizamos data.js y canvas manager del otro archivo si es posible, 
-         pero para evitar conflictos de variables globales, lo incluiré limpio aquí -->
+    <!-- PRINT CONTAINER -->
+    <div id="print-container">
+        <h2 class="print-title">Hoja de Práctica</h2>
+        <div id="print-content"></div>
+    </div>
+
+    <!-- LOGICA DE SELECCION DE MODO -->
+    <script>
+        let currentAppMode = 'practice'; // 'practice' | 'arcade'
+
+        function selectAppMode(mode) {
+            currentAppMode = mode;
+            // Visual update cards
+            document.getElementById('card-practice').classList.toggle('active', mode === 'practice');
+            document.getElementById('card-arcade').classList.toggle('active', mode === 'arcade');
+            
+            // Show/Hide options depending on mode
+            const practiceOpts = document.getElementById('practice-options');
+            const printOpt = document.getElementById('print-option');
+            const btn = document.getElementById('btn-main-action');
+
+            if (mode === 'arcade') {
+                practiceOpts.style.opacity = '0.3'; // Dim options
+                practiceOpts.style.pointerEvents = 'none'; // Disable interactions
+                printOpt.style.display = 'none';
+                btn.innerText = "JUGAR KANA RUSH";
+                btn.style.backgroundColor = "#E6007E"; // Pink
+            } else {
+                practiceOpts.style.opacity = '1';
+                practiceOpts.style.pointerEvents = 'auto';
+                printOpt.style.display = 'block';
+                btn.innerText = "EMPEZAR PRÁCTICA";
+                btn.style.backgroundColor = "#00A0E9"; // Blue
+            }
+        }
+
+        function launchApp() {
+            if (currentAppMode === 'arcade') {
+                KanaRush.start();
+            } else {
+                Game.start();
+            }
+        }
+
+        function closeModalAndRestart() {
+            document.getElementById('game-over-modal').style.display = 'none';
+            KanaRush.start();
+        }
+
+        function closeModalAndExit() {
+            document.getElementById('game-over-modal').style.display = 'none';
+            document.getElementById('arcade-screen').style.display = 'none';
+            document.getElementById('setup-screen').style.display = 'block';
+        }
+    </script>
+
     <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
     <script src="js/game_engine.js"></script>
 </body>
 </html>
