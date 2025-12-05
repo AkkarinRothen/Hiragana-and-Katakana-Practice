@@ -1,414 +1,164 @@
-/* --- MARUGOTO THEME VARIABLES --- */
 :root {
-    --maru-pink: #E6007E;       /* El rosa característico */
-    --maru-pink-light: #fff0f5; /* Fondo rosa muy suave */
-    --maru-blue: #00A0E9;       /* Azul cian complementario */
-    --maru-yellow: #FFF100;     /* Amarillo acento */
-    --maru-gray: #F2F2F2;       /* Fondo general */
-    --text-dark: #4A4A4A;       /* Texto gris oscuro */
-    --text-light: #888888;
-    
-    --font-main: 'M PLUS Rounded 1c', sans-serif; /* Tipografía redondeada */
-    --font-kana: 'Klee One', cursive;
-    
-    --radius-l: 25px;
-    --radius-m: 15px;
-    --radius-s: 8px;
-    
-    --shadow-card: 0 4px 15px rgba(0,0,0,0.05);
-    --shadow-float: 0 8px 20px rgba(230, 0, 126, 0.2);
+    --primary: #ff6b6b;
+    --secondary: #4ecdc4;
+    --dark: #2d3436;
+    --light: #f7f9fc;
+    --danger: #e74c3c;
 }
 
 body {
-    font-family: var(--font-main);
-    background-color: var(--maru-gray);
-    color: var(--text-dark);
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--light);
+    color: var(--dark);
     margin: 0;
     padding: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Patrón de puntos sutil opcional */
-    background-image: radial-gradient(#ddd 1px, transparent 1px);
-    background-size: 20px 20px;
 }
 
-/* --- HEADER --- */
-.marugoto-header {
-    background-color: var(--maru-pink);
-    width: 100%;
-    padding: 1rem 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-    color: white;
+header {
+    background: white; width: 100%; padding: 1rem 0; text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 2rem;
+}
+h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
+
+.btn-main {
+    background: var(--primary); color: white; border: none; padding: 15px 30px;
+    font-size: 1.1rem; border-radius: 50px; cursor: pointer; font-weight: bold;
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4); transition: transform 0.2s; margin: 10px;
+}
+.btn-main:active { transform: scale(0.98); }
+
+.btn-outline {
+    background: transparent; border: 2px solid var(--primary); color: var(--primary);
+    padding: 13px 28px; font-size: 1rem; border-radius: 50px; cursor: pointer; font-weight: bold; margin: 10px;
 }
 
-.header-content {
-    max-width: 600px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
+#setup-screen {
+    background: white; padding: 2rem; border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 600px; width: 90%; margin-bottom: 2rem;
 }
 
-.logo-box {
-    background: white;
-    color: var(--maru-pink);
-    font-weight: 800;
-    padding: 5px 10px;
-    border-radius: 6px;
-    margin-right: 15px;
-    font-size: 1.2rem;
-}
+.toggle-group { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
+.toggle-btn { padding: 10px 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 50px; cursor: pointer; font-weight: bold; }
+.toggle-btn.active { background: var(--primary); color: white; }
 
-h1 {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.jp-title {
-    font-weight: 400;
-    opacity: 0.9;
-    font-size: 1rem;
-    margin-left: 5px;
-}
-
-/* --- LAYOUT --- */
-.main-container {
-    width: 100%;
-    max-width: 550px;
-    padding: 0 20px 40px;
-    box-sizing: border-box;
-}
-
-.card-panel {
-    background: white;
-    border-radius: var(--radius-l);
-    padding: 2rem;
-    box-shadow: var(--shadow-card);
-    border: 1px solid white; /* Para suavizar bordes en algunos monitores */
-}
-
-/* --- SETUP SCREEN ELEMENTS --- */
-.panel-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-.panel-header h2 { margin: 0; color: var(--maru-pink); font-size: 1.5rem; }
-.panel-header p { margin: 5px 0 0; color: var(--text-light); font-size: 0.9rem; }
-
-/* Toggle Pills */
-.toggle-group-pill {
-    background: var(--maru-gray);
-    padding: 5px;
-    border-radius: 50px;
-    display: flex;
-    margin-bottom: 2rem;
-}
-
-.toggle-btn {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 10px 20px;
-    border-radius: 50px;
-    color: var(--text-light);
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: var(--font-main);
-}
-
-.toggle-btn.active {
-    background: white;
-    color: var(--maru-pink);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Section Labels */
-.section-label {
-    display: flex;
-    align-items: center;
-    font-size: 1.1rem;
-    color: var(--text-dark);
-    margin-bottom: 15px;
-    border-bottom: 2px solid var(--maru-gray);
-    padding-bottom: 10px;
-}
-
-.section-label .icon {
-    background: var(--maru-pink);
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-right: 10px;
-}
-
-/* Checkboxes Grid */
 .checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-    gap: 10px;
-    margin-bottom: 2rem;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-bottom: 20px;
+}
+.checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; }
+.checkbox-item:hover { background: #e9ecef; }
+
+.challenge-box {
+    background: #fff0f0; border: 2px dashed var(--primary); padding: 15px;
+    border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;
+}
+.challenge-box.blue { background: #f0f8ff; border-color: var(--secondary); }
+
+.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary); }
+.challenge-box.blue input:checked + .slider { background-color: var(--secondary); }
+input:checked + .slider:before { transform: translateX(24px); }
+
+#practice-screen {
+    display: none; flex-direction: column; align-items: center; width: 100%; max-width: 500px;
 }
 
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    background: var(--maru-pink-light); /* Fondo rosita suave */
-    padding: 8px 12px;
-    border-radius: var(--radius-s);
-    font-size: 0.9rem;
-    color: var(--maru-pink);
-    font-weight: 600;
-    transition: background 0.2s;
+.timer-container {
+    width: 100%; height: 10px; background: #eee; border-radius: 5px;
+    margin-bottom: 15px; overflow: hidden; display: none;
 }
-
-.checkbox-item:hover { background: #ffe0eb; }
-.checkbox-item input { accent-color: var(--maru-pink); }
-
-/* Options List */
-.options-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 2rem;
-}
-
-.option-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background: white;
-    border: 1px solid var(--maru-gray);
-    border-radius: var(--radius-m);
-}
-
-.opt-info { display: flex; flex-direction: column; }
-.opt-info strong { font-size: 0.95rem; color: var(--text-dark); }
-.opt-info small { font-size: 0.8rem; color: var(--text-light); }
-
-/* Switch Style Marugoto */
-.switch.maru {
-    position: relative;
-    display: inline-block;
-    width: 46px;
-    height: 24px;
-}
-.switch.maru input { opacity: 0; width: 0; height: 0; }
-.slider {
-    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc; transition: .4s; border-radius: 34px;
-}
-.slider:before {
-    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
-    background-color: white; transition: .4s; border-radius: 50%;
-}
-input:checked + .slider { background-color: var(--maru-blue); } /* Azul para activo */
-input:checked + .slider:before { transform: translateX(22px); }
-
-/* Buttons */
-.footer-actions { text-align: center; display: flex; gap: 10px; justify-content: center;}
-
-.btn-maru {
-    border: none;
-    border-radius: 50px;
-    padding: 12px 30px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: var(--font-main);
-    transition: transform 0.1s, box-shadow 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-maru:active { transform: scale(0.98); }
-
-.btn-maru.primary {
-    background-color: var(--maru-pink);
-    color: white;
-    box-shadow: 0 4px 10px rgba(230, 0, 126, 0.3);
-}
-.btn-maru.primary:hover { background-color: #c4006b; }
-
-.btn-maru.secondary {
-    background-color: #fff;
-    color: var(--text-dark);
-    border: 2px solid var(--maru-gray);
-}
-.btn-maru.secondary:hover { border-color: #ccc; }
-
-.btn-maru.big { padding: 15px 50px; font-size: 1.1rem; }
-.btn-maru.flex-grow { flex: 1; }
-.btn-maru.outline { background: transparent; border: 2px solid currentColor; }
-.btn-maru.danger { color: #ff6b6b; border-color: #ff6b6b; }
-.btn-maru.success { background: var(--maru-blue); color: white; border: none; }
-.btn-maru.icon-only { padding: 0; width: 45px; height: 45px; border-radius: 50%; font-size: 1.5rem; }
-
-/* --- PRACTICE SCREEN --- */
-.practice-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.badge-pill {
-    background: var(--maru-blue);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: bold;
-}
-
-.timer-circle {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--maru-gray);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold; color: var(--text-dark);
-    font-size: 0.8rem;
-}
-
-.romaji-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
+.timer-bar {
+    height: 100%; width: 100%; background: var(--secondary); transition: width 0.1s linear, background 0.3s;
 }
 
 .romaji-display {
-    font-size: 3.5rem;
-    font-weight: 800;
-    color: var(--maru-pink);
-    letter-spacing: 2px;
+    font-size: 3rem; font-weight: 800; color: var(--dark); margin-bottom: 5px; letter-spacing: 2px;
 }
 
-.audio-icon-btn {
-    background: var(--maru-pink-light);
-    border: none;
-    border-radius: 50%;
-    width: 40px; height: 40px;
-    cursor: pointer;
-    color: var(--maru-pink);
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s;
-}
-.audio-icon-btn:hover { transform: scale(1.1); background: #ffe0eb; }
-
-#instruction-text {
-    text-align: center;
-    color: var(--text-light);
-    font-size: 0.9rem;
-    margin-bottom: 15px;
-}
-
-/* Toolbar & Score */
-.toolbar {
-    display: flex; align-items: center; width: 100%; max-width: 360px; margin: 0 auto 10px;
-}
-.btn-text {
-    background: none; border: none; color: var(--text-light);
-    font-size: 0.85rem; cursor: pointer; text-decoration: underline;
-}
-.spacer { flex: 1; }
-
-.score-display { display: flex; gap: 15px; font-size: 0.9rem; }
-.score-display .best { color: #aaa; }
-.score-display .current { font-weight: bold; color: var(--maru-blue); }
-.score-display-center { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
-
-/* Workspace */
 .workspace {
-    position: relative;
-    width: 100%; max-width: 360px; height: 180px;
-    margin: 0 auto 25px;
-    background: white;
-    border-radius: var(--radius-m);
-    border: 3px solid var(--maru-gray); /* Borde suave */
-    overflow: hidden;
-    /* Grid de papel japonés */
+    position: relative; width: 100%; max-width: 360px; height: 180px; margin-bottom: 20px;
+    background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 4px solid #eee; overflow: hidden;
     background-image: 
-        linear-gradient(rgba(0, 160, 233, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 160, 233, 0.1) 1px, transparent 1px);
-    background-size: 60px 60px;
+        linear-gradient(rgba(168, 208, 230, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 208, 230, 0.4) 1px, transparent 1px);
+    background-size: 50px 50px;
 }
+.workspace.failed { border-color: var(--danger); }
 
-canvas { cursor: crosshair; position: absolute; top: 0; left: 0; z-index: 10; }
+canvas { cursor: crosshair; position: absolute; top: 0; left: 0; z-index: 10; background: transparent; }
 
 #svg-container {
     width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 5;
     background: white; display: flex; justify-content: space-around; align-items: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; box-sizing: border-box; padding: 2px;
 }
 #svg-container.visible { opacity: 1; z-index: 20; pointer-events: auto; }
 
-/* SVG Styles */
-.svg-char { height: 90%; flex: 1; display: flex; justify-content: center; align-items: center; }
+/* Styles for SVG Characters */
+.svg-char { height: 98%; width: auto; flex: 1; display: flex; justify-content: center; align-items: center; min-width: 0; }
 .svg-char svg { width: auto; height: 100%; max-width: 100%; }
-path { 
-    fill: none; 
-    stroke: var(--maru-pink); 
-    stroke-width: 5; 
-    stroke-linecap: round; 
-    stroke-linejoin: round; 
-    stroke-dasharray: 1000; stroke-dashoffset: 1000; 
-}
-text { font-family: sans-serif; font-size: 8px; fill: #ccc; }
+path { fill: none; stroke: #ff6b6b; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+text { font-family: sans-serif; font-size: 8px; fill: #999; }
 
-/* Ghost Mode */
+/* Ghost Mode Style */
 .ghost path {
-    stroke: #ddd !important;
-    stroke-width: 6 !important;
-    stroke-dasharray: 8, 8 !important;
+    stroke: #e0e0e0 !important;
+    stroke-width: 5 !important;
+    stroke-dasharray: 5, 5 !important;
     stroke-dashoffset: 0 !important;
     transition: none !important;
 }
 
-/* Animations */
-.shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; border-color: #ff6b6b !important; background-color: #fff5f5; }
-@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+.toolbar { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; max-width: 360px; }
+.tool-btn { background: #eee; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+.action-bar { display: flex; gap: 10px; width: 100%; max-width: 360px; }
 
-.success-pulse { animation: pulse-blue 0.5s ease-out; }
-@keyframes pulse-blue {
-    0% { box-shadow: 0 0 0 0 rgba(0, 160, 233, 0.7); border-color: var(--maru-blue); }
-    70% { box-shadow: 0 0 0 15px rgba(0, 160, 233, 0); border-color: var(--maru-blue); }
-    100% { box-shadow: 0 0 0 0 rgba(0, 160, 233, 0); }
+.stats-badge {
+    background: var(--dark); color: white; padding: 5px 10px; border-radius: 12px; font-size: 0.8rem;
+    position: absolute; top: -10px; right: -10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none;
+}
+.phase-badge {
+    background: var(--secondary); color: white; padding: 2px 8px; border-radius: 8px;
+    font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; display: inline-block;
 }
 
-/* Timer Bar */
-.timer-container { width: 100%; height: 6px; background: #eee; border-radius: 5px; margin-bottom: 20px; overflow: hidden; display: none; }
-.timer-bar { height: 100%; width: 100%; background: var(--maru-blue); transition: width 0.1s linear; }
+/* Animations */
+.shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--danger) !important; background-color: #fff5f5 !important; }
+@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
-/* Action Bar */
-.action-bar { display: flex; gap: 10px; width: 100%; max-width: 360px; margin: 0 auto; }
+.success-pulse { animation: pulse-green 0.5s ease-out; }
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.7); border-color: var(--secondary); }
+    70% { box-shadow: 0 0 0 20px rgba(78, 205, 196, 0); border-color: var(--secondary); }
+    100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0); }
+}
+
+.audio-btn {
+    background: none; border: none; font-size: 1.5rem; cursor: pointer;
+    color: var(--primary); opacity: 0.7; transition: opacity 0.2s;
+    margin-left: 10px;
+}
+.audio-btn:hover { opacity: 1; transform: scale(1.1); }
 
 /* Print Styles */
 #print-container { display: none; }
 @media print {
     body { background: white; color: black; display: block; }
-    header, .main-container, .no-print { display: none !important; }
+    header, #setup-screen, #practice-screen, .no-print { display: none !important; }
     #print-container { display: block; width: 100%; padding: 20px; }
     .print-row { display: flex; border-bottom: 1px solid #ccc; page-break-inside: avoid; }
     .print-label { width: 80px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; border: 1px solid #ccc; }
     .print-grid { display: grid; grid-template-columns: repeat(8, 1fr); width: 100%; border: 1px solid #000; }
     .print-cell { aspect-ratio: 1; border: 1px solid #ccc; position: relative; display: flex; align-items: center; justify-content: center; }
-    .print-kana { font-family: var(--font-kana); font-size: 3rem; color: #ddd; z-index: 2; }
+    .print-kana { font-family: 'Klee One', cursive; font-size: 3rem; color: #ddd; z-index: 2; }
     .print-kana.master { color: #000; }
 }
+.loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
