@@ -3,181 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dojo de Kana - Completo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <title>Dojo de Kana - Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-    <header class="marugoto-header">
-        <div class="header-content">
-            <div class="logo-box">APP</div>
-            <h1>Dojo de Escritura <span class="jp-title">| かな道場</span></h1>
-        </div>
+    <header>
+        <h1>Dojo de Escritura</h1>
+        <p style="margin:5px; color:#666;">Selecciona • Escribe • Anima</p>
     </header>
 
-    <div class="main-container">
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen">
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-hira" onclick="Game.setMode('hiragana')">Hiragana (あ)</button>
+            <button class="toggle-btn" id="btn-kata" onclick="Game.setMode('katakana')">Katakana (ア)</button>
+        </div>
+
+        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">1. Selecciona Filas</h3>
         
-        <!-- MENU PRINCIPAL -->
-        <div id="setup-screen" class="card-panel">
-            <div class="panel-header">
-                <h2>Elige tu Camino</h2>
-            </div>
-
-            <!-- Selector de Silabario Global -->
-            <div class="toggle-group-pill">
-                <button class="toggle-btn active" id="btn-hira" onclick="Game.setMode('hiragana'); KanaRush.setMode('hiragana');">Hiragana (あ)</button>
-                <button class="toggle-btn" id="btn-kata" onclick="Game.setMode('katakana'); KanaRush.setMode('katakana');">Katakana (ア)</button>
-            </div>
-
-            <!-- Selector de Modo de Juego -->
-            <div style="display: flex; gap: 10px; margin-bottom: 2rem;">
-                <div class="mode-card active" id="card-practice" onclick="selectAppMode('practice')">
-                    <h4>📖 Práctica Zen</h4>
-                    <p>Sin estrés. Elige filas y repasa.</p>
-                </div>
-                <div class="mode-card" id="card-arcade" onclick="selectAppMode('arcade')">
-                    <h4>🔥 Kana Rush</h4>
-                    <p>Arcade contrareloj. Sube de nivel.</p>
-                </div>
-            </div>
-
-            <!-- OPCIONES: SOLO VISIBLES EN MODO PRÁCTICA -->
-            <div id="practice-options">
-                <h3 class="section-label"><span class="icon">1</span> Filas a Estudiar</h3>
-                <div class="checkbox-grid" id="rows-container">
-                    <label class="checkbox-item"><input type="checkbox" value="row-a" checked> Vocales</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-s"> S</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-t"> T</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-n"> N</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-h"> H</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-m"> M</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-y"> Y</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-r"> R</label>
-                    <label class="checkbox-item"><input type="checkbox" value="row-w"> W/N</label>
-                    <label class="checkbox-item"><input type="checkbox" value="dakuten"> Sonoros</label>
-                </div>
-
-                <h3 class="section-label"><span class="icon">2</span> Extras</h3>
-                <div class="options-container">
-                    <div class="option-row">
-                        <div class="opt-info"><strong>Modo Trazado</strong><small>Guía para repasar</small></div>
-                        <label class="switch maru"><input type="checkbox" id="trace-mode-toggle"><span class="slider round"></span></label>
-                    </div>
-                    <div class="option-row">
-                        <div class="opt-info"><strong>Pizarra Digital</strong><small>Dibujar en pantalla</small></div>
-                        <label class="switch maru"><input type="checkbox" id="canvas-mode-toggle" checked><span class="slider round"></span></label>
-                    </div>
-                    <div class="option-row">
-                        <div class="opt-info"><strong>Audio</strong><small>Escuchar pronunciación</small></div>
-                        <label class="switch maru"><input type="checkbox" id="audio-mode-toggle" checked><span class="slider round"></span></label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BOTÓN DE INICIO INTELIGENTE -->
-            <div class="footer-actions">
-                <button class="btn-maru primary big" id="btn-main-action" onclick="launchApp()">EMPEZAR PRÁCTICA</button>
-            </div>
-            <div style="text-align:center; margin-top:10px;" id="print-option">
-                <button class="btn-text" onclick="generatePrintSheet()">o generar hoja PDF</button>
-            </div>
+        <div class="checkbox-grid" id="rows-container">
+            <label class="checkbox-item"><input type="checkbox" value="row-a" checked> Vocales</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-k" checked> K</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-s"> S</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-t"> T</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-n"> N</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-h"> H</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-m"> M</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-y"> Y</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-r"> R</label>
+            <label class="checkbox-item"><input type="checkbox" value="row-w"> W/N</label>
+            <label class="checkbox-item"><input type="checkbox" value="dakuten"> Sonoros</label>
         </div>
 
-        <!-- PANTALLA 1: PRÁCTICA ZEN -->
-        <div id="practice-screen" class="card-panel" style="display:none;">
-            <!-- (Contenido original de práctica) -->
-            <div style="position:relative; width: 100%; text-align: center;">
-                <div id="phase-badge" class="badge-pill">Práctica</div>
-                <div class="romaji-container">
-                    <div class="romaji-display" id="romaji-display">KA</div>
-                    <button id="manual-audio-btn" class="audio-icon-btn" style="display:none;" onclick="Game.playCurrentAudio()"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
-                </div>
+        <h3 style="border-bottom:1px solid #eee; padding-bottom:5px;">2. Configuración</h3>
+        
+        <!-- Toggle Modo Trazado (Aprendizaje) -->
+        <div class="challenge-box blue">
+            <div>
+                <strong>🎓 Modo Aprendizaje (Trazar)</strong><br>
+                <small style="color:#666">Muestra la guía para repasar encima</small>
             </div>
-
-            <p id="instruction-text">Escribe en las zonas asignadas</p>
-
-            <div class="toolbar" id="canvas-toolbar">
-                <button class="btn-text" onclick="CanvasManager.clear()">Borrar todo</button>
-                <span class="spacer"></span>
-                <div class="score-display">
-                    <span id="high-score-display" class="best">Best: 0</span>
-                    <span id="counter" class="current">Score: 0</span>
-                </div>
-            </div>
-            
-            <div id="score-only" class="score-display-center" style="display:none;">
-                <span id="high-score-display-alt" class="best">Best: 0</span>
-                <span id="counter-alt" class="current">Score: 0</span>
-            </div>
-
-            <div class="workspace" id="workspace">
-                <canvas id="writeCanvas" width="360" height="180"></canvas>
-                <div id="svg-container"></div>
-            </div>
-
-            <div class="action-bar" id="default-actions">
-                <button class="btn-maru secondary" onclick="Game.exit()">Salir</button>
-                <button class="btn-maru primary flex-grow" id="action-btn" onclick="Game.handleAction()">Ver Respuesta</button>
-            </div>
-
-            <div class="action-bar" id="evaluation-actions" style="display:none;">
-                <button class="btn-maru danger outline" onclick="Game.markResult(false)">Mal</button>
-                <button class="btn-maru secondary outline icon-only" onclick="Game.replayAnimation()">↺</button>
-                <button class="btn-maru success flex-grow" onclick="Game.markResult(true)">Bien</button>
-            </div>
+            <label class="switch">
+                <input type="checkbox" id="trace-mode-toggle">
+                <span class="slider"></span>
+            </label>
         </div>
 
-        <!-- PANTALLA 2: KANA RUSH (ARCADE) -->
-        <div id="arcade-screen" class="card-panel" style="display:none; border-color: var(--maru-pink);">
-            <!-- HUD -->
-            <div class="game-hud">
-                <div class="hud-item">
-                    <span class="hud-label">Puntaje</span>
-                    <span class="hud-value" id="arcade-score">0</span>
-                </div>
-                <div class="hud-item">
-                    <div class="hearts" id="arcade-lives">❤️❤️❤️</div>
-                </div>
-                <div class="hud-item">
-                    <span class="hud-label">Combo</span>
-                    <span class="hud-value combo" id="arcade-combo">x1.0</span>
-                </div>
+        <!-- Toggle Contrareloj -->
+        <div class="challenge-box">
+            <div>
+                <strong>⏱️ Modo Contrareloj</strong><br>
+                <small style="color:#666">Retos progresivos</small>
             </div>
-
-            <!-- ENEMIGO -->
-            <div class="rush-timer"><div class="rush-fill" id="arcade-timer"></div></div>
-            <div class="enemy-display" id="arcade-enemy">KA</div>
-
-            <!-- AREA DE DIBUJO (Canvas separado para evitar conflictos de ID) -->
-            <div class="workspace">
-                <canvas id="arcadeCanvas" width="360" height="180"></canvas>
-                <div id="arcade-svg-container" style="width:100%;height:100%;position:absolute;top:0;left:0;display:flex;justify-content:center;align-items:center;pointer-events:none;"></div>
-            </div>
-
-            <!-- CONTROLES -->
-            <div class="action-bar" id="arcade-action-area">
-                <button class="btn-maru primary big flex-grow" onclick="KanaRush.checkAnswer()">¡LISTO!</button>
-            </div>
-
-            <div class="action-bar" id="arcade-eval-area" style="display:none;">
-                <button class="btn-maru danger outline" onclick="KanaRush.resolveRound(false)">❌ Fallé</button>
-                <button class="btn-maru success flex-grow" onclick="KanaRush.resolveRound(true)">✅ ¡Acerté!</button>
-            </div>
+            <label class="switch">
+                <input type="checkbox" id="time-mode-toggle">
+                <span class="slider"></span>
+            </label>
         </div>
 
+        <!-- Toggle Pizarra -->
+        <div class="challenge-box">
+            <div>
+                <strong>✏️ Usar Pizarra Digital</strong><br>
+                <small style="color:#666">Dibujar en pantalla</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="canvas-mode-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- Toggle Audio -->
+        <div class="challenge-box">
+            <div>
+                <strong>🔊 Audio de Pronunciación</strong><br>
+                <small style="color:#666">Escuchar al revelar respuesta</small>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="audio-mode-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn-main" id="btn-start">Empezar Práctica</button>
+            <button class="btn-outline" onclick="generatePrintSheet()">🖨️ Generar PDF</button>
+        </div>
     </div>
 
-    <!-- GAME OVER MODAL -->
-    <div id="game-over-modal">
-        <div class="modal-content">
-            <h2 style="margin:0; color:var(--text-light);">Juego Terminado</h2>
-            <div class="final-score" id="final-score">0</div>
-            <p>Mejor Combo: <span id="final-combo" style="font-weight:bold; color:var(--maru-blue)">x1.0</span></p>
-            <button class="btn-maru primary big" onclick="closeModalAndRestart()">Jugar de Nuevo</button>
-            <br><br>
-            <button class="btn-text" onclick="closeModalAndExit()">Volver al Menú</button>
+    <!-- PRACTICE SCREEN -->
+    <div id="practice-screen">
+        
+        <div class="timer-container" id="timer-container">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+
+        <div style="position:relative; width: 100%; text-align: center;">
+            <div id="phase-badge" class="phase-badge">Nivel 1</div>
+            
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <div class="romaji-display" id="romaji-display">KA</div>
+                <button id="manual-audio-btn" class="audio-btn" style="display:none;" onclick="Game.playCurrentAudio()">🔊</button>
+            </div>
+            
+            <div id="timer-badge" class="stats-badge">15s</div>
+        </div>
+
+        <p id="instruction-text" style="color:#888; margin-top:-5px; font-size: 0.9rem;">Escribe en las zonas asignadas</p>
+
+        <div class="toolbar" id="canvas-toolbar">
+            <button class="tool-btn" onclick="CanvasManager.clear()">Borrar 🗑️</button>
+            <span style="flex:1"></span>
+            <div style="display:flex; gap:15px; align-items:center; font-size:0.9rem; color:#666;">
+                <span id="high-score-display">🏆 Best: 0</span>
+                <span id="counter" style="color:var(--dark); font-weight:bold;">Score: 0</span>
+            </div>
+        </div>
+        
+        <div id="score-only" style="display:none; justify-content:center; gap:15px; color:#888; font-size:0.9rem; margin-bottom:10px;">
+            <span id="high-score-display-alt">🏆 Best: 0</span>
+            <span id="counter-alt" style="color:var(--dark); font-weight:bold;">Score: 0</span>
+        </div>
+
+        <div class="workspace" id="workspace">
+            <canvas id="writeCanvas" width="360" height="180"></canvas>
+            <div id="svg-container"></div>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="action-bar" id="default-actions">
+            <button class="btn-outline" onclick="Game.exit()">Salir</button>
+            <button class="btn-main" id="action-btn" onclick="Game.handleAction()" style="flex:2">Ver Respuesta</button>
+        </div>
+
+        <div class="action-bar" id="evaluation-actions" style="display:none;">
+            <button class="btn-outline" style="border-color:var(--danger); color:var(--danger);" onclick="Game.markResult(false)">❌ Mal</button>
+            <button class="btn-outline" onclick="Game.replayAnimation()">↺</button>
+            <button class="btn-main" style="background:var(--secondary); border-color:var(--secondary);" onclick="Game.markResult(true)">✅ Bien</button>
         </div>
     </div>
 
@@ -187,58 +151,7 @@
         <div id="print-content"></div>
     </div>
 
-    <!-- LOGICA DE SELECCION DE MODO -->
-    <script>
-        let currentAppMode = 'practice'; // 'practice' | 'arcade'
-
-        function selectAppMode(mode) {
-            currentAppMode = mode;
-            // Visual update cards
-            document.getElementById('card-practice').classList.toggle('active', mode === 'practice');
-            document.getElementById('card-arcade').classList.toggle('active', mode === 'arcade');
-            
-            // Show/Hide options depending on mode
-            const practiceOpts = document.getElementById('practice-options');
-            const printOpt = document.getElementById('print-option');
-            const btn = document.getElementById('btn-main-action');
-
-            if (mode === 'arcade') {
-                practiceOpts.style.opacity = '0.3'; // Dim options
-                practiceOpts.style.pointerEvents = 'none'; // Disable interactions
-                printOpt.style.display = 'none';
-                btn.innerText = "JUGAR KANA RUSH";
-                btn.style.backgroundColor = "#E6007E"; // Pink
-            } else {
-                practiceOpts.style.opacity = '1';
-                practiceOpts.style.pointerEvents = 'auto';
-                printOpt.style.display = 'block';
-                btn.innerText = "EMPEZAR PRÁCTICA";
-                btn.style.backgroundColor = "#00A0E9"; // Blue
-            }
-        }
-
-        function launchApp() {
-            if (currentAppMode === 'arcade') {
-                KanaRush.start();
-            } else {
-                Game.start();
-            }
-        }
-
-        function closeModalAndRestart() {
-            document.getElementById('game-over-modal').style.display = 'none';
-            KanaRush.start();
-        }
-
-        function closeModalAndExit() {
-            document.getElementById('game-over-modal').style.display = 'none';
-            document.getElementById('arcade-screen').style.display = 'none';
-            document.getElementById('setup-screen').style.display = 'block';
-        }
-    </script>
-
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/game_engine.js"></script>
 </body>
 </html>
