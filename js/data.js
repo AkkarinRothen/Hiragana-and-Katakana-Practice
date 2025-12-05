@@ -1,6 +1,5 @@
 // --- BASE DE DATOS DE CARACTERES ---
-// r: Romaji, h: Hiragana, k: Katakana, g: Grupo, l: Nivel de Dificultad (1-3)
-
+// No requiere cambios para esta actualización, pero debe estar presente.
 const kanaDB = [
     { r: 'a', h: 'あ', k: 'ア', g: 'row-a', l: 2 }, { r: 'i', h: 'い', k: 'イ', g: 'row-a', l: 1 }, { r: 'u', h: 'う', k: 'ウ', g: 'row-a', l: 1 }, { r: 'e', h: 'え', k: 'エ', g: 'row-a', l: 2 }, { r: 'o', h: 'お', k: 'オ', g: 'row-a', l: 2 },
     { r: 'ka', h: 'か', k: 'カ', g: 'row-k', l: 2 }, { r: 'ki', h: 'き', k: 'キ', g: 'row-k', l: 2 }, { r: 'ku', h: 'く', k: 'ク', g: 'row-k', l: 1 }, { r: 'ke', h: 'け', k: 'ケ', g: 'row-k', l: 2 }, { r: 'ko', h: 'こ', k: 'コ', g: 'row-k', l: 1 },
