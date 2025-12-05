@@ -268,3 +268,92 @@ path { fill: none; stroke: var(--ninja-orange); stroke-width: 5; stroke-linecap:
     .print-kana { font-size: 2.5rem; position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color: #ddd; font-family: var(--font-kana); }
     .print-kana.master { color: #000; }
 }
+/* ... (MANTENER TODO EL CÓDIGO ANTERIOR) ... */
+
+/* --- AÑADIR AL FINAL --- */
+
+/* Menú Principal */
+.mode-selector {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;
+}
+.mode-card {
+    border: 2px solid var(--ninja-black); padding: 20px 10px;
+    text-align: center; cursor: pointer; transition: transform 0.1s;
+    background: white;
+}
+.mode-card:active { transform: scale(0.95); }
+.mode-card.primary { border-color: var(--ninja-orange); }
+.mode-card .card-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.mode-card h3 { font-family: var(--font-head); margin: 0; font-size: 1.2rem; }
+.mode-card p { font-size: 0.8rem; color: #666; margin: 5px 0 0; }
+
+.panel-header-row {
+    display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
+    border-bottom: 2px solid var(--ninja-black); padding-bottom: 10px;
+}
+.panel-header-row h2 { margin: 0; font-size: 1.5rem; color: var(--ninja-orange); font-family: var(--font-head); }
+
+/* Mapa de Campaña (Estilo Mario World / Pergamino) */
+.mission-path {
+    display: flex; flex-direction: column; align-items: center; gap: 30px;
+    padding: 20px 0; position: relative;
+}
+/* Linea central */
+.mission-path::before {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px;
+    background: #ccc; z-index: 0; transform: translateX(-50%);
+}
+
+.level-node {
+    width: 280px; background: white; border: 2px solid var(--ninja-black);
+    padding: 15px; position: relative; z-index: 1; cursor: pointer;
+    display: flex; align-items: center; gap: 15px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1); transition: all 0.2s;
+}
+.level-node:active { transform: translateX(2px) translateY(2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+
+/* Estados del Nivel */
+.level-node.locked {
+    background: #eee; border-color: #999; color: #999; pointer-events: none; opacity: 0.8;
+}
+.level-node.completed {
+    border-color: #27AE60;
+}
+.level-node.completed::after {
+    content: '★'; position: absolute; top: -10px; right: -10px;
+    background: #27AE60; color: white; width: 25px; height: 25px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; border: 2px solid white;
+}
+
+.level-icon {
+    width: 40px; height: 40px; background: var(--ninja-black); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-weight: bold; font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.level-node.locked .level-icon { background: #999; }
+.level-node.active .level-icon { background: var(--ninja-orange); }
+
+.level-info h4 { margin: 0; font-family: var(--font-head); font-size: 1.1rem; text-transform: uppercase; }
+.level-info p { margin: 2px 0 0; font-size: 0.8rem; color: #666; }
+
+/* Modal de Victoria */
+.modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+    background: white; padding: 30px; text-align: center;
+    max-width: 300px; border: 4px solid var(--ninja-orange);
+    position: relative;
+}
+.modal-content h2 { margin: 0 0 10px; font-family: var(--font-head); color: var(--ninja-orange); }
+.stamp {
+    font-size: 4rem; color: #E74C3C; border: 3px solid #E74C3C;
+    border-radius: 50%; width: 120px; height: 120px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 20px auto; transform: rotate(-15deg); font-weight: 900;
+    opacity: 0.8; font-family: "MS Mincho", serif; /* Fuente japonesa clásica */
+}
