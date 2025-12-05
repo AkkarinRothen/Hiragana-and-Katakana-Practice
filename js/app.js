@@ -289,11 +289,14 @@ const Game = {
         const workspace = document.getElementById('workspace');
         workspace.classList.remove('failed', 'shake', 'success-pulse');
 
+        // Reset UI actions
+        document.getElementById('default-actions').style.display = 'flex';
+        document.getElementById('evaluation-actions').style.display = 'none';
+        
         const btn = document.getElementById('action-btn');
         btn.innerText = "Ver Respuesta";
         btn.classList.remove('btn-outline');
         btn.classList.add('btn-main');
-        document.getElementById('replay-btn').style.display = 'none';
 
         if (this.settings.canvasMode) {
             CanvasManager.clear();
@@ -340,39 +343,59 @@ const Game = {
     },
 
     handleAction() {
-        if (!this.state.isRevealed) this.revealAnswer(false);
-        else {
-            this.state.score++;
-            this.updateHighScoreUI();
+        if (!this.state.isRevealed) {
+            this.revealAnswer(false);
+        } else {
+            // Solo se llega aquí en modo Time Attack cuando se muestra el botón "Continuar"
             this.nextTurn();
         }
+    },
+
+    // NUEVO: Función para autoevaluación
+    markResult(correct) {
+        const workspace = document.getElementById('workspace');
+        if (correct) {
+            this.state.score++;
+            workspace.classList.add('success-pulse');
+            if (Storage.setHighScore(this.state.score)) {
+                this.state.highScore = this.state.score;
+                this.updateHighScoreUI();
+            }
+        } else {
+            // Penalización leve o mantenerse igual
+            this.state.score = Math.max(0, this.state.score - 1);
+            workspace.classList.add('failed', 'shake');
+        }
+        this.updateUI();
+
+        // Pequeña pausa para ver el efecto visual antes de pasar
+        setTimeout(() => this.nextTurn(), 600);
     },
 
     async revealAnswer(failed = false) {
         this.stopTimer();
         this.state.isRevealed = true;
-
-        const btn = document.getElementById('action-btn');
-        btn.innerText = failed ? "Tiempo Agotado (Continuar)" : "Correcto (Siguiente)";
         
         const workspace = document.getElementById('workspace');
 
         if (failed) {
+            // Si es por tiempo, penalización automática
             this.state.score = Math.max(0, this.state.score - 1);
             workspace.classList.add('failed', 'shake');
             this.updateUI();
+            
+            // Botón cambia a "Continuar" y mantenemos el flow normal
+            const btn = document.getElementById('action-btn');
+            btn.innerText = "Tiempo Agotado (Continuar)";
         } else {
-            workspace.classList.add('success-pulse');
-             if (Storage.setHighScore(this.state.score)) {
-                 this.state.highScore = this.state.score;
-                 this.updateHighScoreUI();
-             }
+            // Si es manual, mostrar botones de evaluación
+            document.getElementById('default-actions').style.display = 'none';
+            document.getElementById('evaluation-actions').style.display = 'flex';
         }
 
         this.playCurrentAudio();
         document.getElementById('manual-audio-btn').style.display = 'block';
 
-        document.getElementById('replay-btn').style.display = 'block';
         const container = document.getElementById('svg-container');
         container.classList.add('visible');
 
